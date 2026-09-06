@@ -1,14 +1,26 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
+
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+
 	import Folders from '$lib/components/Folders.svelte';
 	import Pinned from '$lib/components/Pinned.svelte';
 
+	let {
+		onSearchClick,
+		toggleTheme,
+		theme
+	}: {
+		onSearchClick: () => void;
+		toggleTheme: () => void;
+		theme: 'light' | 'dark';
+	} = $props();
+
 	let collapsed = $state(false);
-	let { onSearchClick, toggleTheme, theme } = $props();
 
 	onMount(() => {
-		function handleKeydown(e) {
+		function handleKeydown(e: KeyboardEvent) {
 			if (e.metaKey && e.key.toLowerCase() === 'e') {
 				e.preventDefault();
 				collapsed = !collapsed;
@@ -63,7 +75,7 @@
 	</div>
 	<div class="sidebar-bottom">
 		<div class="menu-items">
-			<a class="menu-item" href="/stats" aria-current={page.url.pathname === '/stats'}>
+			<a class="menu-item" href={resolve('/stats')} aria-current={page.url.pathname === '/stats'}>
 				<div class="menu-item-name">
 					<div class="mimic-button ghost icon large menu-item-icon">
 						<i class="hgi hgi-stroke hgi-rounded hgi-chart-breakout-square"></i>
@@ -72,7 +84,7 @@
 				</div>
 			</a>
 
-			<a class="menu-item" href="/trash" aria-current={page.url.pathname === '/trash'}>
+			<a class="menu-item" href={resolve('/trash')} aria-current={page.url.pathname === '/trash'}>
 				<div class="menu-item-name">
 					<div class="mimic-button ghost icon large menu-item-icon">
 						<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
@@ -90,7 +102,7 @@
 				<i class="hgi hgi-stroke hgi-rounded hgi-arrow-right-01"></i>
 			</button>
 
-			<div id={`settings-more`} class="popover-menu" popover="auto">
+			<div id="settings-more" class="popover-menu" popover="auto">
 				<button class="menu-item" onclick={toggleTheme}>
 					<div class="menu-item-name">
 						{#if theme === 'light'}
@@ -106,7 +118,7 @@
 						{/if}
 					</div>
 				</button>
-				<a class="menu-item" href="/export" aria-current={page.url.pathname === '/export'}>
+				<a class="menu-item" href={resolve('/export')} aria-current={page.url.pathname === '/export'}>
 					<div class="menu-item-name">
 						<div class="mimic-button ghost icon large menu-item-icon">
 							<i class="hgi hgi-stroke hgi-rounded hgi-download-square-02"></i>
@@ -116,10 +128,8 @@
 				</a>
 				<a
 					class="menu-item"
-					href="/credits"
+					href={resolve('/credits')}
 					aria-current={page.url.pathname === '/credits'}
-					popovertarget="settings-more"
-					popovertargetaction="hide"
 				>
 					<div class="menu-item-name">
 						<div class="mimic-button ghost icon large menu-item-icon">
@@ -193,10 +203,6 @@
 			font-size: var(--step-2);
 			color: var(--color-text-standout);
 		}
-		i {
-			font-size: var(--step-0);
-			color: var(--text-dim);
-		}
 		svg {
 			rect {
 				fill: var(--color-bg-logo);
@@ -205,9 +211,6 @@
 				fill: var(--color-text-logo);
 			}
 		}
-	}
-	.pinned-items {
-		margin-top: var(--space-s);
 	}
 	.tooltip {
 		transform: translateX(6px);
