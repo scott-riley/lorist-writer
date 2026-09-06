@@ -1,22 +1,25 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { db, seedOnboardingContent } from '$lib/db/database.ts';
-	import { stateQuery } from 'dexie-svelte-query';
+
+	import { browser } from '$app/environment';
+
+	import { seedOnboardingContent } from '$lib/db/database';
 	import favicon from '$lib/assets/favicon.svg';
-	import '$lib/assets/style.css';
 	import Sidebar from '$lib/components/Sidebar.svelte';
-	import Editor from '$lib/components/Editor.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import '$lib/assets/style.css';
+
+	type Theme = 'light' | 'dark';
 
 	let { children } = $props();
 	let openPalette = $state(false);
 
-	function getInitialTheme() {
+	function getInitialTheme(): Theme {
 		if (!browser) return 'light';
 		const stored = localStorage.getItem('theme');
-		if (stored) return stored;
+		if (stored === 'light' || stored === 'dark') {
+			return stored;
+		}
 		return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	}
 
@@ -48,13 +51,12 @@
 	/>
 	<link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
 		href="https://fonts.googleapis.com/css2?family=Lilex:ital,wght@0,100..700;1,100..700&display=swap"
 		rel="stylesheet"
 	/>
 	<link rel="icon" href={favicon} />
-	<!-- <link rel="stylesheet" href={favicon} /> -->
 </svelte:head>
 
 <div class="ui">
