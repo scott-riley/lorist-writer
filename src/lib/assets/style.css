@@ -426,6 +426,12 @@ button,
 	justify-content: end;
 	gap: var(--space-s);
 	padding: var(--space-2xs) var(--space-m);
+	position: absolute;
+	background: var(--color-bg);
+	right: 0;
+	top: 0;
+	border-bottom-left-radius: var(--radius-m);
+	z-index: 2;
 }
 
 @scope (.editor) {
@@ -441,8 +447,11 @@ button,
 		--editor-font-weight--normal: 400;
 		--editor-font-family-body: 'General Sans', serif;
 		--editor-font-family-heading: 'Cabinet Grotesk', sans-serif;
-
-		padding-top: var(--space-s);
+		flex: 1;
+		min-height: 0;
+		height: auto;
+		overflow: auto;
+		padding-top: var(--space-l);
 		padding-bottom: var(--space-l);
 	}
 	:scope.editor-font--mono {
@@ -518,7 +527,6 @@ button,
 		font-family: var(--editor-font-family-body);
 		max-width: clamp(300px, 78ch, 980px);
 		margin: auto;
-		margin-bottom: var(--space-3xl);
 		&:focus {
 			outline: none;
 		}
@@ -531,10 +539,6 @@ button,
 	}
 	& > * {
 		margin-bottom: var(--space-m);
-	}
-	:scope {
-		height: 100vh;
-		overflow: auto;
 	}
 	&.focusMode .tiptap > *:not(.has-focus) {
 		opacity: 0.2;
