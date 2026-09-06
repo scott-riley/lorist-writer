@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { starterContent } from '$lib/utils/starter.ts';
+import { starterContent } from '$lib/utils/starter';
 import { generateKeyBetween } from 'fractional-indexing';
-import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 
 interface Folder {
 	id: number;
@@ -83,10 +83,11 @@ async function seedOnboardingContent() {
 		content: JSON.stringify(starterContent),
 		sortKey: postSortKey,
 		wordCount: 0,
-		deletedAt: null
+    deletedAt: null,
+		isPinned: false
 	});
 
-	goto(`/p/${postId}`);
+	resolve('/p/[slug]', { slug: String(postId) })
 }
 
 export { seedOnboardingContent };
