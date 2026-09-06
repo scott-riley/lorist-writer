@@ -1,50 +1,58 @@
-<script>
+<script lang="ts">
 	import { stateQuery } from 'dexie-svelte-query';
-	import { goto } from '$app/navigation';
-	import { db } from '$lib/db/database.ts';
 
-	const postsQuery = stateQuery(() => db.posts.filter((post) => post.deletedAt).toArray());
-	const foldersQuery = stateQuery(() => db.folders.filter((folder) => folder.deletedAt).toArray());
+	import { resolve } from '$app/paths';
+
+	import { db, type Post, type Folder } from '$lib/db/database';
+	import { getFolderPosts } from '$lib/data/posts';
+	import { logError } from '$lib/utils/errors';
+
+	const postsQuery = stateQuery(() => db.posts.filter((post) => !!post.deletedAt).toArray());
+	const foldersQuery = stateQuery(() =>
+		db.folders.filter((folder) => !!folder.deletedAt).toArray()
+	);
 	let posts = $derived(postsQuery.current);
 	let folders = $derived(foldersQuery.current);
-	const dateOptions = {
-		day: 'numeric',
-		month: 'short',
-		year: 'numeric',
-		hour: 'numeric',
-		minute: '2-digit'
-	};
 
-	async function putBack(type, item) {
+	const dateOptions = {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	} satisfies Intl.DateTimeFormatOptions;
+
+	async function putBack(type: 'folder' | 'post', item: Post | Folder) {
 		if (type === 'folder') {
 			try {
 				db.folders.update(item.id, { deletedAt: null });
 			} catch (error) {
-				console.error(`Failed to delete folder: ${error}`);
+				logError('put back folder', error);
 			}
 		} else if (type === 'post') {
 			try {
 				db.posts.update(item.id, { deletedAt: null });
 			} catch (error) {
-				console.error(`Failed to delete folder: ${error}`);
+				logError('put back post', error);
 			}
 		}
 	}
 
-	async function deleteForever(type, item) {
+	async function deleteForever(type: 'folder' | 'post', item: Post | Folder) {
 		if (type === 'folder') {
-			const postsToDelete = await db.posts.filter((post) => post.folderID === item.id).toArray();
+			const folder = item as Folder;
+			const postsToDelete = await getFolderPosts(folder.id);
 			await db.posts.bulkDelete(postsToDelete.map((p) => p.id));
 			try {
 				await db.folders.delete(item.id);
 			} catch (error) {
-				console.error(`Failed to delete folder: ${error}`);
+				logError('delete folder', error);
 			}
 		} else if (type === 'post') {
 			try {
 				await db.posts.delete(item.id);
 			} catch (error) {
-				console.error(`Failed to delete post: ${error}`);
+				logError('delete post', error);
 			}
 		}
 	}
@@ -111,13 +119,18 @@
 							<div class="item-row-name">{folder.name}</div>
 							<div class="item-row-deleted">
 								<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
-								<span>{new Date(folder.deletedAt).toLocaleString('en-GB', dateOptions)}</span>
+								<span>
+									{folder.deletedAt != null
+										? new Date(folder.deletedAt).toLocaleString('en-GB', dateOptions)
+										: ''}
+								</span>
 							</div>
 							<div class="item-row-actions">
 								<button
 									class="ghost icon more-icon"
 									popovertarget={`folder-item-popover--${folder.id}-trash`}
 									style={`anchor-name: --anchor-${folder.id}-trash`}
+									aria-label="more options"
 								>
 									<i class="hgi hgi-stroke hgi-rounded hgi-more-vertical"></i>
 								</button>
@@ -148,18 +161,23 @@
 				<div class="item-rows">
 					{#each posts as post (post.id)}
 						<div class="item-row">
-							<a href={`/p/${post.id}`} class="item-row-name"
+							<a href={resolve(`/p/${post.id}`)} class="item-row-name"
 								>{post.title ? post.title : 'New document'}</a
 							>
 							<div class="item-row-deleted">
 								<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
-								<span>{new Date(post.deletedAt).toLocaleString('en-GB', dateOptions)}</span>
+								<span>
+									{post.deletedAt != null
+										? new Date(post.deletedAt).toLocaleString('en-GB', dateOptions)
+										: ''}
+								</span>
 							</div>
 							<div class="item-row-actions">
 								<button
 									class="ghost icon more-icon"
 									popovertarget={`folder-item-popover--${post.id}-trash`}
 									style={`anchor-name: --anchor-${post.id}-trash`}
+									aria-label="more options"
 								>
 									<i class="hgi hgi-stroke hgi-rounded hgi-more-vertical"></i>
 								</button>

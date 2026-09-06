@@ -1,61 +1,70 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import TurndownService from 'turndown';
+
 	import { Editor } from '@tiptap/core';
+	import TurndownService from 'turndown';
+	import 'highlight.js/styles/github-dark.css';
+
 	import { browser } from '$app/environment';
-	import { stateQuery } from 'dexie-svelte-query';
-	import { editorExtensions } from '$lib/utils/editor';
-	import { db, GLOBAL_FOLDER_ID } from '$lib/db/database';
+
+	import { db, GLOBAL_FOLDER_ID, type Folder, type Post } from '$lib/db/database';
 	import { incrementDailyCount } from '$lib/data/counts';
+	import { editorExtensions } from '$lib/utils/editor';
+	import { getTitleString } from '$lib/utils/post';
 	import { toDateKey } from '$lib/utils/weeks';
-	import { getTitleString } from '$lib/utils/post.ts';
+	import { logError } from '$lib/utils/errors';
 	import WordCount from '$lib/components/WordCount.svelte';
+
+	type EditorFont = 'sans' | 'serif' | 'mono' | 'dys';
 
 	const turndownService = new TurndownService({
 		headingStyle: 'atx',
 		codeBlockStyle: 'fenced'
 	});
 
-	import 'highlight.js/styles/github-dark.css';
+	let { postId }: { postId: string } = $props();
 
-	let bubbleMenu = $state();
-	let element = $state();
+	let element = $state<HTMLDivElement>();
+	let editorFont = $state<EditorFont>(
+		(browser ? (localStorage.getItem('editorFont') as EditorFont | null) : null) ?? 'sans'
+	);
 	let focusMode = $state(false);
-	let editorState = $state({ editor: null });
-	let editorFont = $state('sans');
-	if (browser) {
-		editorFont = localStorage.getItem('editorFont') ? localStorage.getItem('editorFont') : 'sans';
-	}
+
+	let post = $state<Post | null>(null);
+	let folder = $state<Folder | null>(null);
+	let isDeleted = $state(false);
+	let wordGoal = $state<number | null>(null);
+
+	let editor = $state<Editor | null>(null);
+
+	// needed to bump editor version on changing so other shit can react
+	let editorVersion = $state(0);
+
+	let wordCount = $derived.by(() => {
+		void editorVersion;
+		return editor?.storage.characterCount.words() ?? 0;
+	});
+
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
-	let isSaving = $state(false);
-	let saveError = $state<string | null>(null);
-	let isDeleted = $state(false);
-	let wordGoal = $state(null);
-	let statusMessage = $state(null);
-	let statusTimeout;
+	let statusMessage = $state<string | null>(null);
+	let statusTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	let { postId } = $props();
-	let post = $state(null);
-	let currentPost = $state(null);
-	let folder = $state(null);
-
+	// debounce saving, every 2s
 	function scheduleSave() {
-		if (!editorState) {
-			return;
-		}
+		if (!editor) return;
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(async () => {
-			await saveEditorContent();
+		saveTimer = setTimeout(() => {
+			void saveEditorContent();
 		}, 2000);
 	}
 
-	function prettifyHTML(html) {
+	function prettifyHTML(html: string) {
 		return html.replace(/></g, '>\n<');
 	}
 
-	function setStatusMessage(message) {
+	function setStatusMessage(message: string) {
 		statusMessage = message;
 		clearTimeout(statusTimeout);
 		statusTimeout = setTimeout(() => {
@@ -63,109 +72,111 @@
 		}, 4000);
 	}
 
+	function setFont(font: EditorFont) {
+		editorFont = font;
+		localStorage.setItem('editorFont', font);
+	}
+
 	async function saveEditorContent() {
-		if (!editorState) {
-			return;
-		}
-		isSaving = true;
-		saveError = null;
+		if (!editor || !post) return;
 		try {
 			const now = new Date();
 			const date = toDateKey(now);
-			const content = JSON.stringify(editorState.editor.getJSON());
-			const newWordCount = editorState.editor.storage.characterCount.words();
+			const content = JSON.stringify(editor.getJSON());
+			const newWordCount = editor.storage.characterCount.words();
 			const oldPost = await db.posts.get(post.id);
 			const oldWordCount = oldPost?.wordCount ?? 0;
 			const delta = Math.max(0, newWordCount - oldWordCount);
+
 			await db.posts.update(post.id, {
 				content,
 				title: getTitleString(content),
 				wordCount: newWordCount
 			});
+			// if we've got a positive word count
 			if (delta > 0) {
 				await Promise.all([
 					incrementDailyCount(date, post.folderID, delta),
 					incrementDailyCount(date, GLOBAL_FOLDER_ID, delta)
 				]);
 			}
-			post = {
-				...post,
-				content,
-				wordCount: newWordCount,
-				updatedAt: now.getTime()
-			};
+
+			post = { ...post, content, wordCount: newWordCount };
 		} catch (error) {
-			console.error(`Failed to save post: ${error}`);
-		} finally {
-			isSaving = false;
+			logError('save post', error);
 		}
 	}
 
 	async function copyAsHTML() {
+		if (!editor) return;
 		try {
-			const html = prettifyHTML(editorState.editor.getHTML());
+			const html = prettifyHTML(editor.getHTML());
 			await navigator.clipboard.writeText(html);
 			setStatusMessage('Copied as HTML');
 		} catch (error) {
-			console.error('Error copying HTML', error);
+			logError('copy as HTML', error);
 		}
 	}
 
 	async function copyAsMarkdown() {
+		if (!editor) return;
 		try {
-			const html = editorState.editor.getHTML();
-			const markdown = turndownService.turndown(html);
+			const markdown = turndownService.turndown(editor.getHTML());
 			await navigator.clipboard.writeText(markdown);
 			setStatusMessage('Copied as Markdown');
 		} catch (error) {
-			console.error('Error copying markdown', error);
+			logError('copy as Markdown', error);
 		}
 	}
 
-	onMount(async () => {
-		post = await db.posts.where('id').equals(parseInt(postId)).first();
-		folder = await db.folders.where('id').equals(post.folderID).first();
-		function handleKeydown(e) {
+	async function putBack() {
+		if (!post) return;
+		try {
+			await db.posts.update(post.id, { deletedAt: null });
+			isDeleted = false;
+		} catch (error) {
+			logError('restore post', error);
+		}
+	}
+
+	onMount(() => {
+		function handleKeydown(e: KeyboardEvent) {
 			if (e.metaKey && e.key === '/') {
 				e.preventDefault();
 				focusMode = !focusMode;
 			}
 		}
 		window.addEventListener('keydown', handleKeydown);
-		wordGoal = folder?.hasWordGoal ? folder.wordGoal : null;
-		if (post?.deletedAt) {
-			isDeleted = true;
-		}
-		editorState.editor = new Editor({
-			element: element,
-			extensions: editorExtensions,
-			content: post?.content ? JSON.parse(post.content) : null,
-			onTransaction: ({ editor }) => {
-				editorState = { editor };
-			},
-			onUpdate: ({ editor }) => {
-				scheduleSave();
-			}
-		});
+
+		(async () => {
+			const loadedPost = await db.posts.where('id').equals(parseInt(postId)).first();
+			if (!loadedPost) return;
+
+			post = loadedPost;
+			isDeleted = !!post.deletedAt;
+
+			folder = (await db.folders.where('id').equals(post.folderID).first()) ?? null;
+			wordGoal = folder?.hasWordGoal ? folder.wordGoal : null;
+
+			editor = new Editor({
+				element,
+				extensions: editorExtensions,
+				content: post.content ? JSON.parse(post.content) : null,
+				onTransaction: () => {
+					editorVersion += 1;
+				},
+				onUpdate: () => scheduleSave()
+			});
+		})();
+
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 
 	onDestroy(() => {
-		editorState.editor?.destroy();
+		editor?.destroy();
 	});
-
-	async function putBack() {
-		try {
-			db.posts.update(post.id, { deletedAt: null });
-			isDeleted = false;
-		} catch (error) {
-			console.error(`Failed to delete folder: ${error}`);
-		}
-	}
-
-	function setFont(font) {
-		editorFont = font;
-		localStorage.setItem('editorFont', font);
-	}
 </script>
 
 <svelte:head>
@@ -182,7 +193,7 @@
 				</div>
 			{/if}
 			{#if wordGoal}
-				<WordCount count={editorState.editor.storage.characterCount.words()} goal={wordGoal} />
+				<WordCount count={wordCount} goal={wordGoal} />
 			{/if}
 			<button class="ghost icon large font-change" popovertarget="post-font-popover">
 				<span class="font-option font-option-sans">Aa</span>
@@ -208,7 +219,7 @@
 				<div class="tooltip" style="position-anchor: --copy-button">Copy as…</div>
 			</button>
 			<!-- Font selector popover -->
-			<div id={`post-font-popover`} class="popover-menu" popover="auto">
+			<div id="post-font-popover" class="popover-menu" popover="auto">
 				<button
 					class="ghost font-preview--sans"
 					class:two-icon={editorFont === 'sans'}
@@ -267,7 +278,7 @@
 				</button>
 			</div>
 			<!-- Copy menu popover -->
-			<div id={`post-copy-popover`} class="popover-menu" popover="auto">
+			<div id="post-copy-popover" class="popover-menu" popover="auto">
 				<button
 					class="ghost"
 					onclick={copyAsMarkdown}

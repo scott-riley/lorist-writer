@@ -1,11 +1,11 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { starterContent } from '$lib/utils/starter.ts';
+import { starterContent } from '$lib/utils/starter';
 import { generateKeyBetween } from 'fractional-indexing';
-import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 
 interface Folder {
 	id: number;
-	parentID: number;
+	parentID: number | null;
 	name: string;
 	icon: string | null;
 	hasWordGoal: boolean;
@@ -13,7 +13,7 @@ interface Folder {
 	wordGoal: number | null;
 	weeklyWordGoal: number | null;
 	sortKey: string;
-	deletedAt: string;
+	deletedAt: number | null;
 	isPinned: boolean;
 }
 
@@ -24,7 +24,8 @@ interface Post {
 	content: string | null;
 	sortKey: string;
 	wordCount: number;
-	deletedAt: string;
+	deletedAt: number | null;
+  isPinned: boolean;
 }
 
 interface DailyWordCount {
@@ -82,10 +83,11 @@ async function seedOnboardingContent() {
 		content: JSON.stringify(starterContent),
 		sortKey: postSortKey,
 		wordCount: 0,
-		deletedAt: null
+    deletedAt: null,
+		isPinned: false
 	});
 
-	goto(`/p/${postId}`);
+	resolve('/p/[slug]', { slug: String(postId) })
 }
 
 export { seedOnboardingContent };

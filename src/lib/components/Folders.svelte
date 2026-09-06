@@ -1,48 +1,51 @@
 <script lang="ts">
-	import { stateQuery } from 'dexie-svelte-query';
-	import { onMount } from 'svelte';
-	import { db } from '$lib/db/database';
-	import { generateKeyBetween } from 'fractional-indexing';
-	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
-	import type { DragState } from '$lib/types/drag-state';
+	import { onMount, setContext } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import { setContext } from 'svelte';
+
+	import { stateQuery } from 'dexie-svelte-query';
+	import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
+
+	import { db, type Folder } from '$lib/db/database';
+	import { sortKeyAppend, sortKeyForIndex } from '$lib/utils/sort-order';
+	import { logError } from '$lib/utils/errors';
+	import type { DragState } from '$lib/types/drag-state';
 	import FolderItem from '$lib/components/FolderItem.svelte';
 
-	let status = $state(null);
-	let isAdding = $state(null);
-	let newFolderName = $state(null);
-	let draggingPostId = $state(null);
-	let isDraggingPost = $state(false);
-	let hoveredFolderId = $state(null);
-	let dropTargetFolderId = $state(null);
-	let expandFolderId = $state(null);
+	let { onSearchClick }: { onSearchClick: () => void } = $props();
 
-	let { onSearchClick } = $props();
+	// ui state
+	let isAdding = $state(false);
+	let newFolderName = $state<string | null>(null);
+
+	// drag state
+	let isDraggingPost = $state(false);
+	let hoveredFolderId = $state<number | null>(null);
+	let dropTargetFolderId = $state<number | null>(null);
+	let expandFolderId = $state<number | null>(null);
 
 	setContext<DragState>('drag-state', {
 		get isDraggingPost() {
 			return isDraggingPost;
 		},
-		set isDraggingPost(v) {
+		set isDraggingPost(v: boolean) {
 			isDraggingPost = v;
 		},
 		get hoveredFolderId() {
 			return hoveredFolderId;
 		},
-		set hoveredFolderId(v) {
+		set hoveredFolderId(v: number | null) {
 			hoveredFolderId = v;
 		},
 		get dropTargetFolderId() {
 			return dropTargetFolderId;
 		},
-		set dropTargetFolderId(v) {
+		set dropTargetFolderId(v: number | null) {
 			dropTargetFolderId = v;
 		},
 		get expandFolderId() {
 			return expandFolderId;
 		},
-		set expandFolderId(v) {
+		set expandFolderId(v: number | null) {
 			expandFolderId = v;
 		},
 		resetDragTracking() {
@@ -51,13 +54,15 @@
 	});
 
 	onMount(() => {
-		function handleGlobalMouseMove(e) {
+		function handleGlobalMouseMove(e: MouseEvent) {
 			if (!isDraggingPost) return;
 			const elements = document.elementsFromPoint(e.clientX, e.clientY);
-			const header = elements.map((el) => el.closest('[data-folder-id]')).find(Boolean);
+			const header = elements
+				.map((el) => el.closest<HTMLElement>('[data-folder-id]'))
+				.find(Boolean);
 			hoveredFolderId = header ? Number(header.dataset.folderId) : null;
-			console.log('hovered folder', hoveredFolderId);
 		}
+
 		document.addEventListener('mousemove', handleGlobalMouseMove, { capture: true });
 		return () => {
 			document.removeEventListener('mousemove', handleGlobalMouseMove, { capture: true });
@@ -65,68 +70,50 @@
 	});
 
 	const foldersQuery = stateQuery(() =>
-		db.folders
-			.filter((folder) => folder.deletedAt === null || folder.deletedAt === '' || !folder.deletedAt)
-			.sortBy('sortKey')
+		db.folders.filter((folder) => folder.deletedAt === null).sortBy('sortKey')
 	);
 
-	let folders = $state([]);
+	// eslint-disable-next-line svelte/prefer-writable-derived -- $derived makes svelte-dnd-action shit the bed
+	let folders = $state<Folder[]>([]);
 	$effect(() => {
 		folders = foldersQuery.current ?? [];
 	});
 
 	async function addFolder() {
 		try {
-			const lastFolder = folders[folders.length - 1];
-			const sortKey = generateKeyBetween(lastFolder?.sortKey ?? null, null);
-			const id = await db.folders.add({
+			const sortKey = sortKeyAppend(folders);
+			await db.folders.add({
 				parentID: null,
-				name: newFolderName,
+				name: newFolderName ?? '',
 				icon: 'folder-01',
 				sortKey,
-				deletedAt: null
+				deletedAt: null,
+				hasWordGoal: false,
+				hasWeeklyWordGoal: false,
+				wordGoal: null,
+				weeklyWordGoal: null,
+				isPinned: false
 			});
 			isAdding = false;
 		} catch (error) {
-			console.error(`Failed to add folder: ${error}`);
+			logError('add folder', error);
 		}
 	}
 
-	async function moveFolder(folder, direction) {
-		const index = folders.findIndex((f) => f.id === folder.id);
-		const targetIndex = direction === 'up' ? index - 1 : index + 1;
-		if (targetIndex < 0 || targetIndex >= folders.length) return;
-		let above, below;
-		if (direction === 'up') {
-			above = folders[targetIndex - 1] ?? null;
-			below = folders[targetIndex];
-		} else {
-			above = folders[targetIndex];
-			below = folders[targetIndex + 1] ?? null;
-		}
-		const newSortKey = generateKeyBetween(above?.sortKey ?? null, below?.sortKey ?? null);
-		try {
-			await db.folders.update(folder.id, { sortKey: newSortKey });
-		} catch (error) {
-			console.error(`Failed to reorder folder: ${error}`);
-		}
-	}
-
-	function handleDndConsider(e) {
+	function handleDndConsider(e: CustomEvent<DndEvent<Folder>>) {
 		folders = e.detail.items;
 	}
 
-	async function handleDndFinalize(e) {
+	async function handleDndFinalize(e: CustomEvent<DndEvent<Folder>>) {
 		folders = e.detail.items;
-		const movedId = e.detail.info.id;
+		const movedId = Number(e.detail.info.id);
 		const newIndex = folders.findIndex((f) => f.id === movedId);
-		const above = folders[newIndex - 1] ?? null;
-		const below = folders[newIndex + 1] ?? null;
-		const newSortKey = generateKeyBetween(above?.sortKey ?? null, below?.sortKey ?? null);
+
 		try {
+			const newSortKey = sortKeyForIndex(folders, newIndex);
 			await db.folders.update(movedId, { sortKey: newSortKey });
 		} catch (error) {
-			console.error(`Failed to reorder folder: ${error}`);
+			logError('reorder folder', error);
 		}
 	}
 </script>
@@ -146,11 +133,6 @@
 					style="position-anchor: --new-folder-button; position-area: center right;"
 				>
 					New folder
-					<!-- <span class="shortcut">
-						<i class="hgi hgi-stroke hgi-rounded hgi-option"></i>
-						<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
-						<span class="letter-key">N</span>
-					</span> -->
 				</div>
 			</button>
 			<button
@@ -180,14 +162,13 @@
 					class="mimic-button name-text new-folder-name"
 					bind:value={newFolderName}
 					placeholder="New Folder"
-					autofocus
 				/>
 			</div>
 			<div class="menu-item-actions">
-				<button type="submit" class="ghost icon large" onclick={addFolder}>
+				<button type="submit" class="ghost icon large" onclick={addFolder} aria-label="confirm adding folder">
 					<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
 				</button>
-				<button onclick={() => (isAdding = false)}>
+				<button onclick={() => (isAdding = false)} aria-label="cancel adding folder">
 					<i class="hgi hgi-stroke hgi-rounded hgi-cancel-01"></i>
 				</button>
 			</div>
@@ -199,15 +180,9 @@
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
-		{#each folders as folder, i (folder.id)}
+		{#each folders as folder (folder.id)}
 			<div animate:flip={{ duration: 150 }}>
-				<FolderItem
-					{folder}
-					isFirst={i === 0}
-					isLast={i === folders.length - 1}
-					onMoveUp={() => moveFolder(folder, 'up')}
-					onMoveDown={() => moveFolder(folder, 'down')}
-				/>
+				<FolderItem {folder} />
 			</div>
 		{/each}
 	</div>

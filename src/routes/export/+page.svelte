@@ -1,28 +1,21 @@
-<script>
+<script lang="ts">
 	import JSZip from 'jszip';
 	import fileSaver from 'file-saver';
 	import { Editor } from '@tiptap/core';
-	import { Markdown } from 'tiptap-markdown';
-	import { db } from '$lib/db/database.ts';
-	import FileHandler from '@tiptap/extension-file-handler';
-	import Image from '@tiptap/extension-image';
+	import TurndownService from 'turndown';
+
+	import { db } from '$lib/db/database';
+	import { editorExtensions } from '$lib/utils/editor';
 	import { Focus, Placeholder } from '@tiptap/extensions';
 	import { TaskList, TaskItem } from '@tiptap/extension-list';
 
 	const { saveAs } = fileSaver;
+	const turndownService = new TurndownService({
+		headingStyle: 'atx',
+		codeBlockStyle: 'fenced'
+	});
 
-	import StarterKit from '@tiptap/starter-kit';
-
-	const editorExtensions = [
-		StarterKit,
-		TaskList,
-		TaskItem,
-		Markdown.configure({
-			html: false
-		})
-	];
-
-	function sanitizeFilename(title) {
+	function sanitizeFilename(title: string) {
 		return (
 			title
 				?.trim()
@@ -32,7 +25,7 @@
 		);
 	}
 
-	function sanitizeFolderName(name) {
+	function sanitizeFolderName(name: string) {
 		return (
 			String(name || 'untitled')
 				.trim()
@@ -42,34 +35,29 @@
 		);
 	}
 
-	function makeUniqueFilename(title, usedNames) {
+	function makeUniqueFilename(title: string, usedNames: Set<string>) {
 		const baseName = sanitizeFilename(title);
 		let filename = `${baseName}.md`;
 		let counter = 2;
-
 		while (usedNames.has(filename.toLowerCase())) {
 			filename = `${baseName} (${counter}).md`;
 			counter++;
 		}
-
 		usedNames.add(filename.toLowerCase());
 		return filename;
 	}
 
-	async function tiptapJsonToMarkdown(content) {
+	async function tiptapJsonToMarkdown(content: string) {
 		const editor = new Editor({
 			extensions: editorExtensions,
 			content
 		});
-
-		const markdown = editor.storage.markdown.getMarkdown();
-
+		const markdown = turndownService.turndown(editor.getHTML());
 		editor.destroy();
-
 		return markdown;
 	}
 
-	function safeParseContent(raw) {
+	function safeParseContent(raw: string) {
 		if (raw == null) return null;
 		if (typeof raw !== 'string') return raw;
 

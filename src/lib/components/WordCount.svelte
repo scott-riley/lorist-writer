@@ -26,9 +26,6 @@
 		width: 20px; /* Set the width */
 		height: 20px; /* Set the height */
 		border-radius: 50%; /* Make it circular */
-		background:
-			radial-gradient(closest-side, white 79%, transparent 80% 100%),
-			conic-gradient(black 75%, red 0);
 		display: flex; /* Center the text */
 		justify-content: center;
 		align-items: center;
