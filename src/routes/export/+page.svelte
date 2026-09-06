@@ -35,7 +35,7 @@
 		);
 	}
 
-	function makeUniqueFilename(title: string, usedNames: string[] {
+	function makeUniqueFilename(title: string, usedNames: Set<string>) {
 		const baseName = sanitizeFilename(title);
 		let filename = `${baseName}.md`;
 		let counter = 2;
