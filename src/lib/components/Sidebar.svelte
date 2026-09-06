@@ -1,0 +1,215 @@
+<script>
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import Folders from '$lib/components/Folders.svelte';
+	import Pinned from '$lib/components/Pinned.svelte';
+
+	let collapsed = $state(false);
+	let { onSearchClick, toggleTheme, theme } = $props();
+
+	onMount(() => {
+		function handleKeydown(e) {
+			if (e.metaKey && e.key.toLowerCase() === 'e') {
+				e.preventDefault();
+				collapsed = !collapsed;
+			}
+		}
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
+	});
+</script>
+
+<div class="sidebar" class:collapsed>
+	<div class="sidebar-top">
+		<header class="sidebar-header">
+			<div class="logo">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 83 83"
+					fill="none"
+				>
+					<rect width="83" height="83" rx="41.5" fill="black" />
+					<path
+						d="M52.6426 36.9445L62.7093 43.8015V45.1875L48.7034 65.9775H47.3174L37.3237 59.1934H32.9468L28.3512 65.9775H26.9652L16.8984 59.1204V57.7344L48.1198 11.413H49.5058L59.5726 18.27V19.656L37.3966 52.5552V57.5156L51.2566 36.9445H52.6426Z"
+						fill="white"
+					/>
+				</svg>
+				<span>Lorist</span>
+			</div>
+			<div class="actions">
+				<button
+					class="ghost icon large"
+					onclick={() => (collapsed = !collapsed)}
+					style="anchor-name: --expand-collapse-button"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-layout-left"></i>
+					<div
+						class="tooltip"
+						style="position-anchor: --expand-collapse-button; position-area: center right;"
+					>
+						{collapsed ? 'Expand' : 'Collapse'} sidebar
+						<span class="shortcut">
+							<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+							<span class="letter-key">E</span>
+						</span>
+					</div>
+				</button>
+			</div>
+		</header>
+		<Pinned />
+		<Folders {onSearchClick} />
+	</div>
+	<div class="sidebar-bottom">
+		<div class="menu-items">
+			<a class="menu-item" href="/stats" aria-current={page.url.pathname === '/stats'}>
+				<div class="menu-item-name">
+					<div class="mimic-button ghost icon large menu-item-icon">
+						<i class="hgi hgi-stroke hgi-rounded hgi-chart-breakout-square"></i>
+					</div>
+					<span class="ghost name-text">Writing Stats</span>
+				</div>
+			</a>
+
+			<a class="menu-item" href="/trash" aria-current={page.url.pathname === '/trash'}>
+				<div class="menu-item-name">
+					<div class="mimic-button ghost icon large menu-item-icon">
+						<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
+					</div>
+					<span class="ghost name-text">Deleted Items</span>
+				</div>
+			</a>
+			<button class="menu-item" popovertarget="settings-more">
+				<div class="menu-item-name">
+					<div class="mimic-button ghost icon large menu-item-icon">
+						<i class="hgi hgi-stroke hgi-rounded hgi-more-horizontal-square-02"></i>
+					</div>
+					<span class="ghost name-text">More</span>
+				</div>
+				<i class="hgi hgi-stroke hgi-rounded hgi-arrow-right-01"></i>
+			</button>
+
+			<div id={`settings-more`} class="popover-menu" popover="auto">
+				<button class="menu-item" onclick={toggleTheme}>
+					<div class="menu-item-name">
+						{#if theme === 'light'}
+							<div class="mimic-button ghost icon large menu-item-icon">
+								<i class="hgi hgi-stroke hgi-rounded hgi-moon"></i>
+							</div>
+							<span class="ghost name-text">Switch to dark theme</span>
+						{:else}
+							<div class="mimic-button ghost icon large menu-item-icon">
+								<i class="hgi hgi-stroke hgi-rounded hgi-sun-02"></i>
+							</div>
+							<span class="ghost name-text">Switch to light theme</span>
+						{/if}
+					</div>
+				</button>
+				<a class="menu-item" href="/export" aria-current={page.url.pathname === '/export'}>
+					<div class="menu-item-name">
+						<div class="mimic-button ghost icon large menu-item-icon">
+							<i class="hgi hgi-stroke hgi-rounded hgi-download-square-02"></i>
+						</div>
+						<span class="ghost name-text">Export Library</span>
+					</div>
+				</a>
+				<a
+					class="menu-item"
+					href="/credits"
+					aria-current={page.url.pathname === '/credits'}
+					popovertarget="settings-more"
+					popovertargetaction="hide"
+				>
+					<div class="menu-item-name">
+						<div class="mimic-button ghost icon large menu-item-icon">
+							<i class="hgi hgi-stroke hgi-rounded hgi-address-book"></i>
+						</div>
+						<span class="ghost name-text">Credits</span>
+					</div>
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	#settings-more {
+		position-area: center right;
+		transform: translate3d(8px, -4px, 0);
+	}
+	.sidebar {
+		padding: var(--space-2xs);
+		border-right: 1px solid var(--color-border);
+		width: clamp(240px, 20.5vw, 340px);
+		height: 100vh;
+		max-width: 340px;
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		justify-content: space-between;
+		overflow: auto;
+		transition: width 0.2s ease;
+		&.collapsed {
+			width: 60px;
+			.sidebar-header {
+				flex-direction: column;
+				gap: var(--space-xs);
+			}
+			:global(.pinned-items),
+			:global(.folders),
+			:global(.name-text),
+			:global([popovertarget='settings-more']) {
+				display: none;
+			}
+			:global(.menu-item-name) {
+				transform: translate3d(-4px, 1.5px, 0);
+			}
+			.logo span {
+				display: none;
+			}
+		}
+	}
+	.sidebar-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-left: var(--space-xs);
+		padding-right: var(--space-xs);
+		padding-bottom: var(--space-2xs);
+	}
+	.sidebar-top,
+	.sidebar-bottom {
+		/*flex-grow: 1;*/
+		width: 100%;
+	}
+	.logo {
+		display: flex;
+		align-items: center;
+		justify-content: start;
+		gap: calc(var(--space-2xs) + 2px);
+		span {
+			font-weight: 640;
+			font-size: var(--step-2);
+			color: var(--color-text-standout);
+		}
+		i {
+			font-size: var(--step-0);
+			color: var(--text-dim);
+		}
+		svg {
+			rect {
+				fill: var(--color-bg-logo);
+			}
+			path {
+				fill: var(--color-text-logo);
+			}
+		}
+	}
+	.pinned-items {
+		margin-top: var(--space-s);
+	}
+	.tooltip {
+		transform: translateX(6px);
+	}
+</style>
