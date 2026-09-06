@@ -1,34 +1,37 @@
-<script>
-	import { stateQuery } from 'dexie-svelte-query';
+<script lang="ts">
 	import { page } from '$app/state';
-	import { db } from '$lib/db/database.ts';
-	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+
 	import { dragHandle } from 'svelte-dnd-action';
 
-	let { post, showPin } = $props();
+	import { db, type Post } from '$lib/db/database';
+	import { logError } from '$lib/utils/errors';
+
+	let { post, showPin = false }: { post: Post; showPin?: boolean } = $props();
+
+	let isActive = $derived(page.url.pathname === `/p/${post.id}`);
+	let popoverId = $derived(`post-item-popover--${post.id}-${showPin ? 'pin' : 'nopin'}`);
+	let anchorName = $derived(`--anchor-${post.id}-${showPin ? 'pin' : 'nopin'}`);
+	let postHref = $derived(resolve('/p/[slug]', { slug: String(post.id) }));
 
 	async function togglePinned() {
 		try {
-			db.posts.update(post.id, {
-				isPinned: !post.isPinned
-			});
+			await db.posts.update(post.id, { isPinned: !post.isPinned });
 		} catch (error) {
-			console.error(`Failed to pin: ${error}`);
+			logError('toggle pin', error);
 		}
 	}
 
 	async function deletePost() {
 		try {
-			db.posts.update(post.id, {
-				deletedAt: Date.now()
-			});
+			await db.posts.update(post.id, { deletedAt: Date.now() });
 		} catch (error) {
-			console.error(`Failed to delete post: ${error}`);
+			logError('delete post', error);
 		}
 	}
 </script>
 
-<div class="menu-item" class:active={page.url.pathname === `/p/${post?.id}`}>
+<div class="menu-item" class:active={isActive}>
 	<div class="menu-item-name">
 		{#if showPin}
 			<div class="mimic-button ghost icon menu-item-icon">
@@ -39,23 +42,24 @@
 				<i class="hgi hgi-stroke hgi-rounded hgi-drag-drop-vertical"></i>
 			</span>
 		{/if}
-		<a class="button ghost name-text" href={`/p/${post.id}`}
-			>{post.title ? post.title : 'New document'}</a
-		>
+		<a class="button ghost name-text" href={postHref}>
+		    {post.title ? post.title : 'New document'}
+		</a>
 	</div>
 	<div class="menu-item-actions">
 		<button
 			class="ghost icon more-icon"
-			popovertarget={`post-item-popover--${post.id}-${showPin ? 'pin' : 'nopin'}`}
-			style={`anchor-name: --anchor-${post.id}-${showPin ? 'pin' : 'nopin'}`}
+			popovertarget={popoverId}
+			style={`anchor-name: ${anchorName}`}
+			aria-label="More options"
 		>
 			<i class="hgi hgi-stroke hgi-rounded hgi-more-vertical"></i>
 		</button>
 		<div
-			id={`post-item-popover--${post.id}-${showPin ? 'pin' : 'nopin'}`}
+			id={popoverId}
 			class="popover-menu"
 			popover="auto"
-			style={`position-anchor: --anchor-${post.id}-${showPin ? 'pin' : 'nopin'}`}
+			style={`position-anchor: ${anchorName}`}
 		>
 			<button class="ghost two-icon" onclick={togglePinned}>
 				<div>
