@@ -5,7 +5,7 @@ import { goto } from '$app/navigation';
 
 interface Folder {
 	id: number;
-	parentID: number;
+	parentID: number | null;
 	name: string;
 	icon: string | null;
 	hasWordGoal: boolean;
