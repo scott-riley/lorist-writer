@@ -1,4 +1,4 @@
-import { GLOBAL_FOLDER_ID } from '$lib/db/database';
+import { GLOBAL_FOLDER_ID, type Folder } from '$lib/db/database';
 import { toDateKey } from '$lib/utils/weeks';
 
 export function countKey(date: string, folderID: number) {
