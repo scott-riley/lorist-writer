@@ -13,7 +13,7 @@ interface Folder {
 	wordGoal: number | null;
 	weeklyWordGoal: number | null;
 	sortKey: string;
-	deletedAt: string;
+	deletedAt: number | null;
 	isPinned: boolean;
 }
 
@@ -24,7 +24,7 @@ interface Post {
 	content: string | null;
 	sortKey: string;
 	wordCount: number;
-	deletedAt: string;
+	deletedAt: number | null;
 }
 
 interface DailyWordCount {

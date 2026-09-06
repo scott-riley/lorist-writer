@@ -1,146 +1,70 @@
 <script lang="ts">
-	import { stateQuery } from 'dexie-svelte-query';
 	import { getContext } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import { generateKeyBetween } from 'fractional-indexing';
+
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+
+	import { stateQuery } from 'dexie-svelte-query';
+	import { dragHandle, dragHandleZone, TRIGGERS, type DndEvent } from 'svelte-dnd-action';
+
+	import { db, type Folder, type Post } from '$lib/db/database';
+	import { sortKeyAppend, sortKeyForIndex } from '$lib/utils/sort-order';
+	import { getFolderPosts } from '$lib/data/posts';
+	import { logError } from '$lib/utils/errors';
+	import type { DragState } from '$lib/types/drag-state';
 	import PostItem from '$lib/components/PostItem.svelte';
-	import { dragHandleZone, dragHandle, TRIGGERS } from 'svelte-dnd-action';
-	import type { Folder, Post, db } from '$lib/db/database';
 
-	let {
-		folder,
-		isFirst = false,
-		isLast = false,
-		onMoveUp,
-		onMoveDown
-	}: {
-		folder: Folder;
-		isFirst?: boolean;
-		isLast?: boolean;
-		onMoveUp: () => void;
-		onMoveDown: () => void;
-	} = $props();
+	const FOLDER_ICONS = [
+		'sticker', 'pokemon', 'book-01', 'book-open-01', 'book-heart',
+		'notebook-01', 'notebook-02', 'note-01', 'note-02', 'rubber-duck',
+		'pen-01', 'pencil-edit-01', 'quill-write-01', 'newspaper', 'blogger',
+		'bookmark-01', 'folder-01', 'folder-02', 'archive-01', 'file-01',
+		'calendar-01', 'task-01', 'check-list', 'bulb', 'star', 'sparkles',
+		'chef-hat', 'coffee-01', 'cake', 'apple-01', 'shopping-basket-01',
+		'plant-01', 'camera-01', 'image-01', 'music-note-01', 'paint-brush-01',
+		'alien-01', 'rocket-01', 'ghost', 'magic-wand-01', 'game-controller-01',
+		'gift', 'cookie', 'ice-cream-02', 'cat', 'smile', 'laughing', 'sun-03',
+		'skull', 'brain-01', 'mushroom', 'octopus', 'crab', 'snail', 'bone-01',
+		'poop', 'alien-02', 'robot-01', 'eye', 'tongue', 'finger-print'
+	] as const;
 
+	let { folder }: { folder: Folder } = $props();
+
+	const dragState = getContext<DragState>('drag-state');
+
+	// UI state
+	let expanded = $state(false);
+	let isRenaming = $state(false);
+	let folderName = $state(folder.name);
+	let folderIcon = $state<string>(folder.icon ?? 'folder-01');
+
+	// Word goal form state
+	let hasWordGoal = $state(folder.hasWordGoal);
+	let wordGoal = $state(folder.wordGoal);
+	let hasWeeklyWordGoal = $state(folder.hasWeeklyWordGoal);
+	let weeklyWordGoal = $state(folder.weeklyWordGoal);
+
+	const postsQuery = stateQuery(() => getFolderPosts(folder.id));
+	// eslint-disable-next-line svelte/prefer-writable-derived -- $derived makes svelte-dnd-action shit the bed
+	let posts = $state<Post[]>([]);
+	$effect(() => {
+		posts = postsQuery.current ?? [];
+	});
 	let currentPostId = $derived(Number(page.params.slug));
 
+	// Drag state local to this folder instance
+	let draggedPostId = $state<number | null>(null);
+
+	// Auto-expand when navigating directly to a post inside this folder
 	$effect(() => {
 		if (posts.some((post) => post.id === currentPostId)) {
 			expanded = true;
 		}
 	});
 
-	let expanded = $state(false);
-	let folderName = $state(folder.name);
-	let isRenaming = $state(false);
-	let hasWordGoal = $state(folder.hasWordGoal);
-	let wordGoal = $state(folder.wordGoal);
-	let weeklyWordGoal = $state(folder.weeklyWordGoal);
-	let hasWeeklyWordGoal = $state(folder.hasWeeklyWordGoal);
-	const dragState = getContext('drag-state');
-	let wasAutoExpanded = $state(false);
-
-	$effect(() => {
-		if (!dragState.isDraggingPost && expanded && posts.length === 0) {
-			expanded = false;
-		}
-	});
-
-	let renameEl = null;
-	let folderIcon = $state('folder-01');
-	if (folder.icon) {
-		folderIcon = folder.icon;
-	}
-
-	const icons = [
-		'sticker',
-		'pokemon',
-		'book-01',
-		'book-open-01',
-		'book-heart',
-		'notebook-01',
-		'notebook-02',
-		'note-01',
-		'note-02',
-		'rubber-duck',
-		'pen-01',
-		'pencil-edit-01',
-		'quill-write-01',
-		'newspaper',
-		'blogger',
-		'bookmark-01',
-		'folder-01',
-		'folder-02',
-		'archive-01',
-		'file-01',
-		'calendar-01',
-		'task-01',
-		'check-list',
-		'bulb',
-		'star',
-		'sparkles',
-		'chef-hat',
-		'coffee-01',
-		'cake',
-		'apple-01',
-		'shopping-basket-01',
-		'plant-01',
-		'camera-01',
-		'image-01',
-		'music-note-01',
-		'paint-brush-01',
-		'alien-01',
-		'rocket-01',
-		'ghost',
-		'magic-wand-01',
-		'game-controller-01',
-		'gift',
-		'cookie',
-		'ice-cream-02',
-		'cat',
-		'smile',
-		'laughing',
-		'sun-03',
-		'skull',
-		'brain-01',
-		'mushroom',
-		'octopus',
-		'crab',
-		'snail',
-		'bone-01',
-		'poop',
-		'alien-02',
-		'robot-01',
-		'eye',
-		'tongue',
-		'finger-print'
-	];
-
-	async function deleteFolder() {
-		try {
-			db.folders.update(folder.id, {
-				deletedAt: Date.now()
-			});
-		} catch (error) {
-			console.error(`Failed to delete folder: ${error}`);
-		}
-	}
-
-	const postsQuery = stateQuery(() =>
-		db.posts
-			.where('folderID')
-			.equals(folder.id)
-			.filter((folder) => folder.deletedAt === null)
-			.sortBy('sortKey')
-	);
-
-	let posts = $state([]);
-
-	$effect(() => {
-		posts = postsQuery.current ?? [];
-	});
-
+	// Auto-expand when this folder becomes a cross-folder drop target
 	$effect(() => {
 		if (dragState.expandFolderId === folder.id) {
 			expanded = true;
@@ -148,26 +72,80 @@
 		}
 	});
 
-	let draggedPostId = $state(null);
+	// Collapse an empty folder once a drag that emptied it has finished
+	$effect(() => {
+		if (!dragState.isDraggingPost && expanded && posts.length === 0) {
+			expanded = false;
+		}
+	});
+	// focus and select the rename input when added to dom
+	function init(el: HTMLInputElement) {
+		el.focus();
+		el.select();
+		el.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') cancelRename();
+		});
+	}
+
+	function cancelRename() {
+		folderName = folder.name;
+		isRenaming = false;
+	}
+
+	async function commitRename() {
+		try {
+			await db.folders.update(folder.id, { name: folderName });
+			isRenaming = false;
+		} catch (error) {
+			logError('rename folder', error);
+		}
+	}
+
+	async function setGoals() {
+		try {
+			await db.folders.update(folder.id, { weeklyWordGoal, hasWeeklyWordGoal, wordGoal, hasWordGoal });
+			isRenaming = false;
+		} catch (error) {
+			logError('set folder goals', error);
+		}
+	}
+
+	async function setIcon(icon: string) {
+		folderIcon = icon;
+		try {
+			await db.folders.update(folder.id, { icon });
+		} catch (error) {
+			logError('set folder icon', error);
+		}
+	}
+
+	async function deleteFolder() {
+		try {
+			await db.folders.update(folder.id, { deletedAt: Date.now() });
+		} catch (error) {
+			logError('delete folder', error);
+		}
+	}
 
 	async function addPostToFolder() {
 		try {
-			const lastPost = posts[posts.length - 1];
-			const sortKey = generateKeyBetween(lastPost?.sortKey ?? null, null);
+			const sortKey = sortKeyAppend(posts);
 			const id = await db.posts.add({
 				folderID: folder.id,
-				content: ``,
+				title: '',
+				content: '',
+				wordCount: 0,
 				sortKey,
 				deletedAt: null
 			});
 			expanded = true;
-			goto(`/p/${id}`);
+			goto(resolve('/p/[slug]', { slug: String(id) }));
 		} catch (error) {
-			console.error(`Failed to add post to folder: ${error}`);
+			logError('add post to folder', error);
 		}
 	}
 
-	function handlePostDndConsider(e) {
+	function handlePostDndConsider(e: CustomEvent<DndEvent<Post>>) {
 		if (!dragState.isDraggingPost) {
 			dragState.resetDragTracking();
 		}
@@ -176,30 +154,15 @@
 		dragState.isDraggingPost = true;
 	}
 
-	async function handlePostDndFinalize(e) {
+	async function handlePostDndFinalize(e: CustomEvent<DndEvent<Post>>) {
 		posts = e.detail.items;
 		draggedPostId = null;
+
 		const movedId = e.detail.info.id;
 		const newIndex = posts.findIndex((p) => p.id === movedId);
+
 		if (e.detail.info.trigger === TRIGGERS.DROPPED_OUTSIDE_OF_ANY) {
-			const targetFolderId = dragState.hoveredFolderId;
-			if (targetFolderId && targetFolderId !== folder.id) {
-				const targetPosts = await db.posts
-					.where('folderID')
-					.equals(targetFolderId)
-					.filter((p) => p.deletedAt === null)
-					.sortBy('sortKey');
-				const lastPost = targetPosts[targetPosts.length - 1];
-				const newSortKey = generateKeyBetween(lastPost?.sortKey ?? null, null);
-				try {
-					await db.posts.update(movedId, { sortKey: newSortKey, folderID: targetFolderId });
-					dragState.dropTargetFolderId = targetFolderId;
-					dragState.expandFolderId = targetFolderId;
-				} catch (error) {
-					console.error(`Failed to move post: ${error}`);
-				}
-			}
-			dragState.isDraggingPost = false;
+			await handleHeaderDrop(movedId);
 			return;
 		}
 
@@ -210,72 +173,31 @@
 
 		dragState.dropTargetFolderId = folder.id;
 		dragState.isDraggingPost = false;
-		const above = posts[newIndex - 1] ?? null;
-		const below = posts[newIndex + 1] ?? null;
-		const newSortKey = generateKeyBetween(above?.sortKey ?? null, below?.sortKey ?? null);
+
 		try {
+			const newSortKey = sortKeyForIndex(posts, newIndex);
 			await db.posts.update(movedId, { sortKey: newSortKey, folderID: folder.id });
 		} catch (error) {
-			console.error(`Failed to reorder post: ${error}`);
+			logError('reorder post', error);
 		}
 	}
 
-	function handleHeaderMouseEnter() {
-		console.log('mouseenter fired', dragState.isDraggingPost);
-		if (dragState.isDraggingPost && !expanded) {
-			expanded = true;
-		}
-	}
+	async function handleHeaderDrop(movedId: number) {
+		const targetFolderId = dragState.hoveredFolderId;
 
-	function init(el) {
-		el.focus();
-		el.select();
-		el.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape') {
-				cancelRename();
+		if (targetFolderId && targetFolderId !== folder.id) {
+			try {
+				const targetPosts = await getFolderPosts(targetFolderId);
+				const sortKey = sortKeyAppend(targetPosts);
+				await db.posts.update(movedId, { sortKey, folderID: targetFolderId });
+				dragState.dropTargetFolderId = targetFolderId;
+				dragState.expandFolderId = targetFolderId;
+			} catch (error) {
+				logError('move post to folder', error);
 			}
-		});
-	}
-
-	async function commitRename() {
-		try {
-			db.folders.update(folder.id, {
-				name: folderName
-			});
-			isRenaming = false;
-		} catch (error) {
-			console.error(`Failed to add folder: ${error}`);
 		}
-	}
 
-	async function setGoals() {
-		try {
-			db.folders.update(folder.id, {
-				weeklyWordGoal,
-				hasWeeklyWordGoal,
-				wordGoal,
-				hasWordGoal
-			});
-			isRenaming = false;
-		} catch (error) {
-			console.error(`Failed to set goals: ${error}`);
-		}
-	}
-
-	async function setIcon(icon) {
-		folderIcon = icon;
-		try {
-			db.folders.update(folder.id, {
-				icon: icon
-			});
-		} catch (error) {
-			console.error(`Failed to add folder: ${error}`);
-		}
-	}
-
-	function cancelRename() {
-		folderName = folder.name;
-		isRenaming = false;
+		dragState.isDraggingPost = false;
 	}
 </script>
 
@@ -290,6 +212,7 @@
 			class="ghost icon large menu-item-icon"
 			disabled={!posts?.length}
 			onclick={() => (expanded = !expanded)}
+			aria-label={expanded ? 'Collapse folder' : 'Expand folder'}
 		>
 			<i class={`hgi hgi-stroke hgi-rounded hgi-${folderIcon} initial-icon`}></i>
 			<i class="hgi hgi-stroke hgi-rounded hgi-arrow-right-01 replacement-icon"></i>
@@ -307,13 +230,14 @@
 	</div>
 	{#if !isRenaming}
 		<div class="menu-item-actions">
-			<button class="ghost icon" onclick={addPostToFolder}>
+			<button class="ghost icon" onclick={addPostToFolder} aria-label="Add post to folder">
 				<i class="hgi hgi-stroke hgi-rounded hgi-add-01"></i>
 			</button>
 			<button
 				class="ghost icon more-icon"
 				popovertarget={`folder-item-popover--${folder.id}`}
 				style={`anchor-name: --anchor-${folder.id}`}
+				aria-label="More options"
 			>
 				<i class="hgi hgi-stroke hgi-rounded hgi-more-vertical"></i>
 			</button>
@@ -350,11 +274,12 @@
 					popover="auto"
 					style={`position-anchor: --anchor-icon-${folder.id}`}
 				>
-					{#each icons as icon (icon)}
+					{#each FOLDER_ICONS as icon (icon)}
 						<button
 							class="ghost icon large"
 							class:active={folder.icon === icon}
 							onclick={() => setIcon(icon)}
+							aria-label={icon}
 						>
 							<i class={`hgi hgi-stroke hgi-${icon}`}></i>
 						</button>
@@ -364,7 +289,7 @@
 		</div>
 	{:else}
 		<div class="menu-item-actions">
-			<button class="ghost icon" onclick={cancelRename}>
+			<button class="ghost icon" onclick={cancelRename} aria-label="Cancel renaming">
 				<i class="hgi hgi-stroke hgi-rounded hgi-cancel-01"></i>
 			</button>
 		</div>
@@ -467,8 +392,8 @@
 		<div class="posts-empty">Drop a document here</div>
 	{/if}
 	{#each posts as post (post.id)}
-		<div animate:flip={{ duration: 150 }}>
-			<PostItem {post} />
+		<div animate:flip={{ duration: 150 }} class:dragging={post.id === draggedPostId}>
+			<PostItem showPin={false} {post} />
 		</div>
 	{/each}
 </div>
@@ -555,13 +480,6 @@
 	}
 	input[role='switch']:checked {
 		background-color: var(--color-text);
-	}
-	input[role='switch']:focus-visible {
-		/*box-shadow:
-			0 0.15em 0.25em rgba(0, 0, 0, 0.5) inset,
-			0 -0.5px 0 rgba(255, 255, 255, 0.2) inset,
-			0 0 0 2px rgba(255, 255, 255, 0.8),
-			0 0 0 4px var(--bg-checked, var(--bg, rgb(60, 130, 250)));*/
 	}
 	input[role='switch']:checked::before {
 		transform: translate(120%, 20%);
