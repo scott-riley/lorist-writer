@@ -124,7 +124,7 @@
 	--color-border-mid: #3f3f46;
 	--color-bg-danger: #dc2626;
 	--color-bg-danger-hover: #991b1b;
-	--color-bg-code: #18181b;
+	--color-bg-code: var(--color-bg-muted);
 	--color-modal-backdrop: rgba(0, 0, 0, 0.75);
 	--shadow-elevation-low:
 		0.3px 0.2px 0.4px hsl(var(--shadow-color) / 0.35),
@@ -546,19 +546,6 @@ button,
 		position: relative;
 		color: var(--color-text-standout);
 		font-family: var(--editor-font-family-heading);
-		/*&:before {
-			content: '#';
-			font-family: 'AzeretMono-Variable', monospace;
-			margin-left: -2ch;
-			font-weight: 220;
-			opacity: 0.23;
-			font-size: clamp(18px, 0.6em, 44px);
-			position: absolute;
-			top: 0.45em;
-			.focusMode & {
-				opacity: 0;
-			}
-		}*/
 	}
 	h1 {
 		font-size: var(--step-4);
@@ -570,19 +557,30 @@ button,
 		margin-bottom: var(--space-2xs);
 		margin-top: var(--space-l);
 		font-weight: 760;
-		/*&:before {
-			content: '##';
-			margin-left: -3ch;
-		}*/
 	}
 	h3 {
 		font-size: var(--step-2);
 		margin-top: var(--space-m);
 		margin-bottom: var(--space-3xs);
-		/*&:before {
-			content: '###';
-			margin-left: -4ch;
-		}*/
+	}
+	h4 {
+		font-size: var(--step-1);
+		margin-top: var(--space-s);
+		margin-bottom: var(--space-3xs);
+	}
+	h5 {
+		font-size: var(--step--1);
+		text-transform: uppercase;
+		font-weight: 546;
+		letter-spacing: 0.1em;
+		margin-top: var(--space-xs);
+		margin-bottom: var(--space-3xs);
+		color: var(--color-text-standout);
+	}
+	h6 {
+		font-size: var(--font-size-0);
+		font-weight: 500;
+		color: var(--color-text-standout);
 	}
 	li {
 		margin-bottom: 0;
@@ -663,6 +661,42 @@ button,
 			outline: 3px solid var(--color-bg-dim);
 			outline-offset: 4px;
 		}
+	}
+	/* fuckin tables tho */
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: var(--space-m) 0;
+		font-size: var(--step-0);
+	}
+
+	th,
+	td {
+		border-bottom: 1px solid var(--color-border);
+		padding: var(--space-2xs) var(--space-xs);
+		text-align: left;
+		vertical-align: top;
+		* {
+			font-size: var(--step--1);
+		}
+	}
+
+	th {
+		font-weight: 640;
+		color: var(--color-text-standout);
+		* {
+			font-weight: 640;
+		}
+	}
+
+	td p,
+	th p {
+		margin: 0;
+	}
+	hr {
+		border: 0;
+		height: 1px;
+		background: var(--color-border);
 	}
 }
 
