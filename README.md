@@ -1,4 +1,4 @@
-<img width="2928" height="1808" alt="image" src="https://github.com/user-attachments/assets/fc32b13f-7a9e-4616-82c0-943e20128eb0" />
+<img width="2400" height="1350" alt="image" src="https://github.com/user-attachments/assets/74b9a278-8f97-4064-b2cf-d9a9f2b3dec6" />
 
 # Welcome to Lorist
 
