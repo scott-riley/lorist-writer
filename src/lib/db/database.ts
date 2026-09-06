@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import { starterContent } from '$lib/utils/starter';
 import { generateKeyBetween } from 'fractional-indexing';
 import { resolve } from '$app/paths';
+import { goto } from '$app/navigation';
 
 interface Folder {
 	id: number;
@@ -87,7 +88,7 @@ async function seedOnboardingContent() {
 		isPinned: false
 	});
 
-	resolve('/p/[slug]', { slug: String(postId) })
+	goto(resolve('/p/[slug]', { slug: String(postId) }));
 }
 
 export { seedOnboardingContent };
