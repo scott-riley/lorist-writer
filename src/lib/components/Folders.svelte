@@ -133,11 +133,6 @@
 					style="position-anchor: --new-folder-button; position-area: center right;"
 				>
 					New folder
-					<!-- <span class="shortcut">
-						<i class="hgi hgi-stroke hgi-rounded hgi-option"></i>
-						<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
-						<span class="letter-key">N</span>
-					</span> -->
 				</div>
 			</button>
 			<button

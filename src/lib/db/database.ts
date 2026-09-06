@@ -25,7 +25,7 @@ interface Post {
 	sortKey: string;
 	wordCount: number;
 	deletedAt: number | null;
-  isPinned: boolean | null;
+  isPinned: boolean;
 }
 
 interface DailyWordCount {
