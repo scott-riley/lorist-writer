@@ -318,6 +318,12 @@
 	.app {
 		flex-grow: 1;
 	}
+	.editor-ui {
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
 	.status-message {
 		padding: var(--space-3xs) var(--space-xs);
 		background: var(--color-bg-dim);
@@ -357,12 +363,6 @@
 		font-size: var(--step--1);
 		font-family: 'OpenDyslexic';
 	}
-	/*.editor-ui {
-		width: 100%;
-	}
-	.editor {
-		width: 100%;
-	}*/
 	.editor-header {
 		display: flex;
 		justify-content: space-between;
