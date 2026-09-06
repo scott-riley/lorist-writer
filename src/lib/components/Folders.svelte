@@ -162,7 +162,6 @@
 					class="mimic-button name-text new-folder-name"
 					bind:value={newFolderName}
 					placeholder="New Folder"
-					autofocus
 				/>
 			</div>
 			<div class="menu-item-actions">

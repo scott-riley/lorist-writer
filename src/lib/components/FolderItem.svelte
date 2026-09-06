@@ -151,7 +151,7 @@
 			dragState.resetDragTracking();
 		}
 		posts = e.detail.items;
-		draggedPostId = e.detail.info.id;
+		draggedPostId = Number(e.detail.info.id);
 		dragState.isDraggingPost = true;
 	}
 
@@ -159,7 +159,7 @@
 		posts = e.detail.items;
 		draggedPostId = null;
 
-		const movedId = e.detail.info.id;
+		const movedId = Number(e.detail.info.id);
 		const newIndex = posts.findIndex((p) => p.id === movedId);
 
 		if (e.detail.info.trigger === TRIGGERS.DROPPED_OUTSIDE_OF_ANY) {
