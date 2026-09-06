@@ -136,7 +136,8 @@
 				content: '',
 				wordCount: 0,
 				sortKey,
-				deletedAt: null
+				deletedAt: null,
+				isPinned: false
 			});
 			expanded = true;
 			goto(resolve('/p/[slug]', { slug: String(id) }));
