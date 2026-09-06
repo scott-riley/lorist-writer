@@ -6,7 +6,7 @@ interface Sortable {
 
 export function sortKeyForIndex<T extends Sortable>(items: T[], index: number): string {
 	const above = items[index - 1] ?? null;
-	const below = items[index] ?? null;
+	const below = items[index + 1] ?? null;
 	return generateKeyBetween(above?.sortKey ?? null, below?.sortKey ?? null);
 }
 
