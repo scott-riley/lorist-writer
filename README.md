@@ -1,3 +1,5 @@
+<img width="2928" height="1808" alt="image" src="https://github.com/user-attachments/assets/fc32b13f-7a9e-4616-82c0-943e20128eb0" />
+
 # Welcome to Lorist
 
 Lorist is the writing app that gets out of your way. No tracking, no bloated feature sets, no trying to be an all–in–one productivity tool, no AI bloat any kind. Just you, your words, and juuuust enough functionality to make writing feel lovely.
