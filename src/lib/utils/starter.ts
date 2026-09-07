@@ -11,7 +11,35 @@ export const starterContent = {
 			content: [
 				{
 					type: 'text',
-					text: 'Lorist is the writing app that gets out of your way. No tracking, no bloated feature sets, no trying to be an all–in–one productivity tool, no AI bloat of any kind. Just you, your words, and juuuust enough functionality to make writing feel lovely.'
+					text: 'Lorist is the writing app that gets out of your way. No tracking, no bloated feature sets, no trying to be an all–in–one productivity tool, no AI bloat of any kind. Just you, your words, and just enough functionality to make writing feel lovely.'
+				}
+			]
+		},
+		{
+			type: 'heading',
+			attrs: { level: 2 },
+			content: [{ type: 'text', text: 'Get writing' }]
+		},
+		{
+			type: 'paragraph',
+			content: [
+				{
+					type: 'text',
+					text: 'The easiest way to get to grips with Lorist is to write in it. Add a folder and a new document and start putting some lovely words down. Or just jump right in to the middle of this document and try it straight away!'
+				}
+			]
+		},
+		{
+			type: 'heading',
+			attrs: { level: 3 },
+			content: [{ type: 'text', text: 'Markdown–based' }]
+		},
+		{
+			type: 'paragraph',
+			content: [
+				{
+					type: 'text',
+					text: 'If you\u2019ve written in Markdown before, you should feel right at home in Lorist. Documents are simple and semantic, no block-based shenanigans, and can be exported to super clean Markdown.'
 				}
 			]
 		},
@@ -98,20 +126,6 @@ export const starterContent = {
 				{
 					type: 'text',
 					text: 'All of your data is saved locally to your browser and not a single byte of your created content will be synced or uploaded to a server. This means you have full ownership of anything you produce, and your writing and ideas aren\u2019t being piped into a dozen sync and storage services and — perhaps most importantly — your data isn\u2019t getting gobbled up by AI.'
-				}
-			]
-		},
-		{
-			type: 'heading',
-			attrs: { level: 3 },
-			content: [{ type: 'text', text: 'Markdown–based' }]
-		},
-		{
-			type: 'paragraph',
-			content: [
-				{
-					type: 'text',
-					text: 'If you\u2019ve written in Markdown before, you should feel right at home in Lorist. Documents are simple and semantic, no block-based shenanigans, and can be exported to super clean Markdown.'
 				}
 			]
 		}
