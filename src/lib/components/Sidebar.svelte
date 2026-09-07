@@ -17,11 +17,19 @@
 
 	let collapsed = $state(false);
 
+	function toggleSidebar() {
+		localStorage.setItem('sidebarState', collapsed ? 'expanded' : 'collapsed');
+		collapsed = !collapsed;
+	}
+
 	onMount(() => {
+		if (localStorage.getItem('sidebarState') === 'collapsed') {
+			collapsed = true;
+		}
 		function handleKeydown(e: KeyboardEvent) {
 			if (e.metaKey && e.key.toLowerCase() === 'e') {
 				e.preventDefault();
-				collapsed = !collapsed;
+				toggleSidebar();
 			}
 		}
 		window.addEventListener('keydown', handleKeydown);
@@ -51,7 +59,7 @@
 			<div class="actions">
 				<button
 					class="ghost icon large"
-					onclick={() => (collapsed = !collapsed)}
+					onclick={toggleSidebar}
 					style="anchor-name: --expand-collapse-button"
 				>
 					<i class="hgi hgi-stroke hgi-rounded hgi-layout-left"></i>
