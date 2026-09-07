@@ -57,10 +57,17 @@
 		rel="stylesheet"
 	/>
 	<link rel="icon" href={favicon} />
+	<title>Lorist; the writing app that gets out of your way</title>
+	<meta property="og:image" content="https://lorist.app/og.png" />
+	<meta property="og:title" content="Lorist; the writing app that gets out of your way" />
+	<meta
+		property="og:description"
+		content="Lorist was designed for people who still want to write their own words instead of asking robots to do it for them. It’s an ode to sitting down with a fresh coffee and… just writing."
+	/>
 </svelte:head>
 
 <div class="ui">
-	<Sidebar onSearchClick={() => (openPalette = true)} {toggleTheme} {theme} />
+	<Sidebar {toggleTheme} {theme} />
 	{@render children()}
 	<a class="beta-badge" href="https://mindfuldesignxyz.gitbook.io/lorist/open-beta" target="_blank">
 		<i class="hgi hgi-stroke hgi-rounded hgi-beta"></i>

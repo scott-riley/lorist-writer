@@ -15,6 +15,7 @@
 	import { toDateKey } from '$lib/utils/weeks';
 	import { logError } from '$lib/utils/errors';
 	import WordCount from '$lib/components/WordCount.svelte';
+	import NoPostIllo from './icons/NoPostIllo.svelte';
 
 	type EditorFont = 'sans' | 'serif' | 'mono' | 'dys';
 
@@ -35,6 +36,7 @@
 	let folder = $state<Folder | null>(null);
 	let isDeleted = $state(false);
 	let wordGoal = $state<number | null>(null);
+	let hasPost = $state<boolean | null>(null);
 
 	let editor = $state<Editor | null>(null);
 
@@ -102,6 +104,7 @@
 			}
 
 			post = { ...post, content, wordCount: newWordCount };
+			hasPost = true;
 		} catch (error) {
 			logError('save post', error);
 		}
@@ -150,9 +153,13 @@
 
 		(async () => {
 			const loadedPost = await db.posts.where('id').equals(parseInt(postId)).first();
-			if (!loadedPost) return;
+			if (!loadedPost) {
+				hasPost = false;
+				return;
+			}
 
 			post = loadedPost;
+			hasPost = true;
 			isDeleted = !!post.deletedAt;
 
 			folder = (await db.folders.where('id').equals(post.folderID).first()) ?? null;
@@ -183,136 +190,153 @@
 	<title>{post?.title ? post.title : 'New document'} | Lorist</title>
 </svelte:head>
 
-<div class="app">
-	<div class="editor-ui">
-		<div class="editor-controls">
-			{#if statusMessage}
-				<div class="status-message" transition:fly={{ x: 4, duration: 200 }}>
-					<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
-					<span>{statusMessage}</span>
-				</div>
-			{/if}
-			{#if wordGoal}
-				<WordCount count={wordCount} goal={wordGoal} />
-			{/if}
-			<button class="ghost icon large font-change" popovertarget="post-font-popover">
-				<span class="font-option font-option-sans">Aa</span>
-				<div class="tooltip" style="position-anchor: --font-change">Editor font</div>
-			</button>
-			<button
-				class="ghost icon large"
-				class:active={focusMode}
-				onclick={() => (focusMode = !focusMode)}
-				style="anchor-name: --focus-mode-button"
-			>
-				<i class="hgi hgi-stroke hgi-rounded hgi-center-focus"></i>
-				<div class="tooltip" style="position-anchor: --focus-mode-button">
-					Focus mode
-					<span class="shortcut">
-						<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
-						<span class="letter-key">/</span>
-					</span>
-				</div>
-			</button>
-			<button class="ghost icon large copy-button" popovertarget="post-copy-popover">
-				<i class="hgi hgi-stroke hgi-rounded hgi-copy"></i>
-				<div class="tooltip" style="position-anchor: --copy-button">Copy as…</div>
-			</button>
-			<!-- Font selector popover -->
-			<div id="post-font-popover" class="popover-menu" popover="auto">
-				<button
-					class="ghost font-preview--sans"
-					class:two-icon={editorFont === 'sans'}
-					class:active={editorFont === 'sans'}
-					onclick={() => setFont('sans')}
-				>
-					<div class="button-left">
-						<i class="font-preview-icon">Aa</i>
-						<span>Sans–serif</span>
-					</div>
-					{#if editorFont === 'sans'}
-						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
-					{/if}
-				</button>
-				<button
-					class="ghost font-preview--serif"
-					class:two-icon={editorFont === 'serif'}
-					class:active={editorFont === 'serif'}
-					onclick={() => setFont('serif')}
-				>
-					<div class="button-left">
-						<i class="font-preview-icon">Aa</i>
-						<span>Serif</span>
-					</div>
-					{#if editorFont === 'serif'}
-						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
-					{/if}
-				</button>
-				<button
-					class="ghost font-preview--mono"
-					class:two-icon={editorFont === 'mono'}
-					class:active={editorFont === 'mono'}
-					onclick={() => setFont('mono')}
-				>
-					<div class="button-left">
-						<i class="font-preview-icon">Aa</i>
-						<span>Monospaced</span>
-					</div>
-					{#if editorFont === 'mono'}
-						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
-					{/if}
-				</button>
-				<button
-					class="ghost font-preview--dys"
-					class:two-icon={editorFont === 'dys'}
-					class:active={editorFont === 'dys'}
-					onclick={() => setFont('dys')}
-				>
-					<div class="button-left">
-						<i class="font-preview-icon">Aa</i>
-						<span>OpenDyslexic</span>
-					</div>
-					{#if editorFont === 'dys'}
-						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
-					{/if}
-				</button>
-			</div>
-			<!-- Copy menu popover -->
-			<div id="post-copy-popover" class="popover-menu" popover="auto">
-				<button
-					class="ghost"
-					onclick={copyAsMarkdown}
-					popovertarget="post-copy-popover"
-					popovertargetaction="hide"
-				>
-					<i class="hgi hgi-stroke hgi-rounded hgi-notepad-text"></i>
-					<span>Copy as Markdown</span>
-				</button>
-				<button
-					class="ghost"
-					onclick={copyAsHTML}
-					popovertarget="post-copy-popover"
-					popovertargetaction="hide"
-				>
-					<i class="hgi hgi-stroke hgi-rounded hgi-code-xml"></i>
-					<span>Copy as HTML</span>
-				</button>
-			</div>
-		</div>
-		{#if isDeleted}
-			<div class="editor-alert">
-				<div class="deleted-badge">
-					<i class="hgi hgi-stroke hgi-rounded hgi-alert-diamond"></i>
-					<div>
-						<b>Trashed document</b> – this document has been placed in your trash.
-						<button onclick={putBack}>Restore</button>
-					</div>
-				</div>
-			</div>
-		{/if}
-		<div class={`editor editor-font--${editorFont}`} class:focusMode bind:this={element}></div>
+{#if hasPost === null}
+	<div class="empty loading">
+		<i class="hgi hgi-stroke hgi-rounded hgi-loader-pinwheel"></i>
 	</div>
-</div>
+{:else if hasPost === false}
+	<div class="empty">
+		<div class="empty-icon">
+			<NoPostIllo />
+		</div>
+		<h2>Can’t find post</h2>
+		<p>
+			Looks like this post doesn’t exist anymore, or maybe it never did. Check your browser’s URL or
+			try searching for the post you were expecting.
+		</p>
+	</div>
+{:else}
+	<div class="app">
+		<div class="editor-ui">
+			<div class="editor-controls">
+				{#if statusMessage}
+					<div class="status-message" transition:fly={{ x: 4, duration: 200 }}>
+						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
+						<span>{statusMessage}</span>
+					</div>
+				{/if}
+				{#if wordGoal}
+					<WordCount count={wordCount} goal={wordGoal} />
+				{/if}
+				<button class="ghost icon large font-change" popovertarget="post-font-popover">
+					<span class="font-option font-option-sans">Aa</span>
+					<div class="tooltip" style="position-anchor: --font-change">Editor font</div>
+				</button>
+				<button
+					class="ghost icon large"
+					class:active={focusMode}
+					onclick={() => (focusMode = !focusMode)}
+					style="anchor-name: --focus-mode-button"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-center-focus"></i>
+					<div class="tooltip" style="position-anchor: --focus-mode-button">
+						Focus mode
+						<span class="shortcut">
+							<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+							<span class="letter-key">/</span>
+						</span>
+					</div>
+				</button>
+				<button class="ghost icon large copy-button" popovertarget="post-copy-popover">
+					<i class="hgi hgi-stroke hgi-rounded hgi-copy"></i>
+					<div class="tooltip" style="position-anchor: --copy-button">Copy as…</div>
+				</button>
+				<!-- Font selector popover -->
+				<div id="post-font-popover" class="popover-menu" popover="auto">
+					<button
+						class="ghost font-preview--sans"
+						class:two-icon={editorFont === 'sans'}
+						class:active={editorFont === 'sans'}
+						onclick={() => setFont('sans')}
+					>
+						<div class="button-left">
+							<i class="font-preview-icon">Aa</i>
+							<span>Sans–serif</span>
+						</div>
+						{#if editorFont === 'sans'}
+							<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
+						{/if}
+					</button>
+					<button
+						class="ghost font-preview--serif"
+						class:two-icon={editorFont === 'serif'}
+						class:active={editorFont === 'serif'}
+						onclick={() => setFont('serif')}
+					>
+						<div class="button-left">
+							<i class="font-preview-icon">Aa</i>
+							<span>Serif</span>
+						</div>
+						{#if editorFont === 'serif'}
+							<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
+						{/if}
+					</button>
+					<button
+						class="ghost font-preview--mono"
+						class:two-icon={editorFont === 'mono'}
+						class:active={editorFont === 'mono'}
+						onclick={() => setFont('mono')}
+					>
+						<div class="button-left">
+							<i class="font-preview-icon">Aa</i>
+							<span>Monospaced</span>
+						</div>
+						{#if editorFont === 'mono'}
+							<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
+						{/if}
+					</button>
+					<button
+						class="ghost font-preview--dys"
+						class:two-icon={editorFont === 'dys'}
+						class:active={editorFont === 'dys'}
+						onclick={() => setFont('dys')}
+					>
+						<div class="button-left">
+							<i class="font-preview-icon">Aa</i>
+							<span>OpenDyslexic</span>
+						</div>
+						{#if editorFont === 'dys'}
+							<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
+						{/if}
+					</button>
+				</div>
+				<!-- Copy menu popover -->
+				<div id="post-copy-popover" class="popover-menu" popover="auto">
+					<button
+						class="ghost"
+						onclick={copyAsMarkdown}
+						popovertarget="post-copy-popover"
+						popovertargetaction="hide"
+					>
+						<i class="hgi hgi-stroke hgi-rounded hgi-notepad-text"></i>
+						<span>Copy as Markdown</span>
+					</button>
+					<button
+						class="ghost"
+						onclick={copyAsHTML}
+						popovertarget="post-copy-popover"
+						popovertargetaction="hide"
+					>
+						<i class="hgi hgi-stroke hgi-rounded hgi-code-xml"></i>
+						<span>Copy as HTML</span>
+					</button>
+				</div>
+			</div>
+			{#if isDeleted}
+				<div class="editor-alert">
+					<div class="deleted-badge">
+						<i class="hgi hgi-stroke hgi-rounded hgi-alert-diamond"></i>
+						<div>
+							<b>Trashed document</b> – this document has been placed in your trash.
+							<button onclick={putBack}>Restore</button>
+						</div>
+					</div>
+				</div>
+			{/if}
+			<div class={`editor editor-font--${editorFont}`} class:focusMode bind:this={element}></div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.app {
@@ -419,5 +443,14 @@
 	}
 	.tooltip {
 		transform: translateX(-6px);
+	}
+	.loading i {
+		font-size: var(--step-4);
+		animation: spinner 1.5s linear infinite;
+	}
+	@keyframes spinner {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
