@@ -1,14 +1,19 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { stateQuery } from 'dexie-svelte-query';
-	import { db } from '$lib/db/database.ts';
-	import { getTitleString } from '$lib/utils/post.ts';
 
-	let { open = $bindable(false) } = $props();
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+
+	import { stateQuery } from 'dexie-svelte-query';
+
+	import { db, type Post } from '$lib/db/database';
+	import { getTitleString } from '$lib/utils/post';
+
+	let { open = $bindable(false) }: { open: boolean } = $props();
 	let query = $state('');
 	let selectedIndex = $state(0);
-	let inputEl;
+	let inputEl = $state<HTMLInputElement>();
+	let modalEl = $state<HTMLDivElement>();
 
 	const postsQuery = stateQuery(() => db.posts.filter((post) => post.deletedAt === null).toArray());
 
@@ -26,18 +31,24 @@
 		open = true;
 		query = '';
 		selectedIndex = 0;
+		if (modalEl) {
+			modalEl.togglePopover();
+		}
 	}
 
 	function closePalette() {
 		open = false;
+		if (modalEl) {
+			modalEl.togglePopover();
+		}
 	}
 
-	function goToPost(post) {
+	function goToPost(post: Post) {
 		closePalette();
-		goto(`/p/${post.id}`);
+		goto(resolve(`/p/[slug]`, { slug: String(post.id) }));
 	}
 
-	function handleInputKeydown(e) {
+	function handleInputKeydown(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
 			selectedIndex = Math.min(selectedIndex + 1, filteredPosts.length - 1);
@@ -55,11 +66,22 @@
 	}
 
 	onMount(() => {
-		function handleGlobalKeydown(e) {
+		function handleGlobalKeydown(e: KeyboardEvent) {
 			if (e.metaKey && e.key === 'k') {
 				e.preventDefault();
-				open ? closePalette() : openPalette();
+				if (open) {
+					closePalette();
+				} else {
+					openPalette();
+				}
 			}
+		}
+		if (modalEl) {
+			modalEl.addEventListener('toggle', () => {
+				if (modalEl?.matches(':popover-open') && inputEl) {
+					inputEl.focus();
+				}
+			});
 		}
 		window.addEventListener('keydown', handleGlobalKeydown);
 		return () => window.removeEventListener('keydown', handleGlobalKeydown);
@@ -72,56 +94,42 @@
 	});
 </script>
 
-{#if open}
-	<div class="command-palette-backdrop" onclick={closePalette}>
-		<div class="command-palette" onclick={(e) => e.stopPropagation()}>
-			<div class="command-palette-header">
-				<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
-				<input
-					bind:this={inputEl}
-					type="text"
-					placeholder="Jump to a document…"
-					bind:value={query}
-					onkeydown={handleInputKeydown}
-				/>
-			</div>
-			<ul class="command-list">
-				{#each filteredPosts as post, i (post.id)}
-					<li>
-						<button
-							class="command-item"
-							class:selected={i === selectedIndex}
-							onmouseenter={() => (selectedIndex = i)}
-							onclick={() => goToPost(post)}
-						>
-							<div class="command-item-name">
-								{post.title}
-							</div>
-							<div class="command-item-go">
-								<span>Open</span>
-								<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
-							</div>
-						</button>
-					</li>
-				{:else}
-					<li class="command-empty">No matching documents</li>
-				{/each}
-			</ul>
-		</div>
+<div class="modal command-palette" id="command-palette" popover bind:this={modalEl}>
+	<div class="command-palette-header">
+		<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
+		<input
+			bind:this={inputEl}
+			type="text"
+			placeholder="Jump to a document…"
+			bind:value={query}
+			onkeydown={handleInputKeydown}
+		/>
 	</div>
-{/if}
+	<ul class="command-list">
+		{#each filteredPosts as post, i (post.id)}
+			<li>
+				<button
+					class="command-item"
+					class:selected={i === selectedIndex}
+					onmouseenter={() => (selectedIndex = i)}
+					onclick={() => goToPost(post)}
+				>
+					<div class="command-item-name">
+						{post.title}
+					</div>
+					<div class="command-item-go">
+						<span>Open</span>
+						<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
+					</div>
+				</button>
+			</li>
+		{:else}
+			<li class="command-empty">No matching documents</li>
+		{/each}
+	</ul>
+</div>
 
 <style>
-	.command-palette-backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--color-modal-backdrop);
-		display: flex;
-		align-items: flex-start;
-		justify-content: center;
-		padding-top: 15vh;
-		z-index: 1000;
-	}
 	.command-palette {
 		width: clamp(480px, 90vw, 620px);
 		background: var(--color-bg);

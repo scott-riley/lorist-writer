@@ -11,8 +11,6 @@
 	import type { DragState } from '$lib/types/drag-state';
 	import FolderItem from '$lib/components/FolderItem.svelte';
 
-	let { onSearchClick }: { onSearchClick: () => void } = $props();
-
 	// ui state
 	let isAdding = $state(false);
 	let newFolderName = $state<string | null>(null);
@@ -137,7 +135,7 @@
 			</button>
 			<button
 				class="ghost icon"
-				onclick={() => onSearchClick()}
+				popovertarget="command-palette"
 				style="anchor-name: --search-button"
 			>
 				<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
@@ -165,7 +163,12 @@
 				/>
 			</div>
 			<div class="menu-item-actions">
-				<button type="submit" class="ghost icon large" onclick={addFolder} aria-label="confirm adding folder">
+				<button
+					type="submit"
+					class="ghost icon large"
+					onclick={addFolder}
+					aria-label="confirm adding folder"
+				>
 					<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
 				</button>
 				<button onclick={() => (isAdding = false)} aria-label="cancel adding folder">
