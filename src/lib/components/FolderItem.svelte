@@ -17,17 +17,67 @@
 	import PostItem from '$lib/components/PostItem.svelte';
 
 	const FOLDER_ICONS = [
-		'sticker', 'pokemon', 'book-01', 'book-open-01', 'book-heart',
-		'notebook-01', 'notebook-02', 'note-01', 'note-02', 'rubber-duck',
-		'pen-01', 'pencil-edit-01', 'quill-write-01', 'newspaper', 'blogger',
-		'bookmark-01', 'folder-01', 'folder-02', 'archive-01', 'file-01',
-		'calendar-01', 'task-01', 'check-list', 'bulb', 'star', 'sparkles',
-		'chef-hat', 'coffee-01', 'cake', 'apple-01', 'shopping-basket-01',
-		'plant-01', 'camera-01', 'image-01', 'music-note-01', 'paint-brush-01',
-		'alien-01', 'rocket-01', 'ghost', 'magic-wand-01', 'game-controller-01',
-		'gift', 'cookie', 'ice-cream-02', 'cat', 'smile', 'laughing', 'sun-03',
-		'skull', 'brain-01', 'mushroom', 'octopus', 'crab', 'snail', 'bone-01',
-		'poop', 'alien-02', 'robot-01', 'eye', 'tongue', 'finger-print'
+		'sticker',
+		'pokemon',
+		'book-01',
+		'book-open-01',
+		'book-heart',
+		'notebook-01',
+		'notebook-02',
+		'note-01',
+		'note-02',
+		'rubber-duck',
+		'pen-01',
+		'pencil-edit-01',
+		'quill-write-01',
+		'newspaper',
+		'blogger',
+		'bookmark-01',
+		'folder-01',
+		'folder-02',
+		'archive-01',
+		'file-01',
+		'calendar-01',
+		'task-01',
+		'check-list',
+		'bulb',
+		'star',
+		'sparkles',
+		'chef-hat',
+		'coffee-01',
+		'cake',
+		'apple-01',
+		'shopping-basket-01',
+		'plant-01',
+		'camera-01',
+		'image-01',
+		'music-note-01',
+		'paint-brush-01',
+		'alien-01',
+		'rocket-01',
+		'ghost',
+		'magic-wand-01',
+		'game-controller-01',
+		'gift',
+		'cookie',
+		'ice-cream-02',
+		'cat',
+		'smile',
+		'laughing',
+		'sun-03',
+		'skull',
+		'brain-01',
+		'mushroom',
+		'octopus',
+		'crab',
+		'snail',
+		'bone-01',
+		'poop',
+		'alien-02',
+		'robot-01',
+		'eye',
+		'tongue',
+		'finger-print'
 	] as const;
 
 	let { folder }: { folder: Folder } = $props();
@@ -37,13 +87,19 @@
 	// UI state
 	let expanded = $state(false);
 	let isRenaming = $state(false);
+	// svelte-ignore state_referenced_locally
 	let folderName = $state(folder.name);
+	// svelte-ignore state_referenced_locally
 	let folderIcon = $state<string>(folder.icon ?? 'folder-01');
 
 	// Word goal form state
+	// svelte-ignore state_referenced_locally
 	let hasWordGoal = $state(folder.hasWordGoal);
+	// svelte-ignore state_referenced_locally
 	let wordGoal = $state(folder.wordGoal);
+	// svelte-ignore state_referenced_locally
 	let hasWeeklyWordGoal = $state(folder.hasWeeklyWordGoal);
+	// svelte-ignore state_referenced_locally
 	let weeklyWordGoal = $state(folder.weeklyWordGoal);
 
 	const postsQuery = stateQuery(() => getFolderPosts(folder.id));
@@ -103,7 +159,12 @@
 
 	async function setGoals() {
 		try {
-			await db.folders.update(folder.id, { weeklyWordGoal, hasWeeklyWordGoal, wordGoal, hasWordGoal });
+			await db.folders.update(folder.id, {
+				weeklyWordGoal,
+				hasWeeklyWordGoal,
+				wordGoal,
+				hasWordGoal
+			});
 			isRenaming = false;
 		} catch (error) {
 			logError('set folder goals', error);

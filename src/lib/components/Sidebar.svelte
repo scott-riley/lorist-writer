@@ -8,11 +8,9 @@
 	import Pinned from '$lib/components/Pinned.svelte';
 
 	let {
-		onSearchClick,
 		toggleTheme,
 		theme
 	}: {
-		onSearchClick: () => void;
 		toggleTheme: () => void;
 		theme: 'light' | 'dark';
 	} = $props();
@@ -71,7 +69,7 @@
 			</div>
 		</header>
 		<Pinned />
-		<Folders {onSearchClick} />
+		<Folders />
 	</div>
 	<div class="sidebar-bottom">
 		<div class="menu-items">
@@ -118,7 +116,11 @@
 						{/if}
 					</div>
 				</button>
-				<a class="menu-item" href={resolve('/export')} aria-current={page.url.pathname === '/export'}>
+				<a
+					class="menu-item"
+					href={resolve('/export')}
+					aria-current={page.url.pathname === '/export'}
+				>
 					<div class="menu-item-name">
 						<div class="mimic-button ghost icon large menu-item-icon">
 							<i class="hgi hgi-stroke hgi-rounded hgi-download-square-02"></i>
