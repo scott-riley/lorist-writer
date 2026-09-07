@@ -77,7 +77,7 @@
 			}
 		}
 		if (modalEl) {
-			modalEl.addEventListener('toggle', (e: ToggleEvent) => {
+			modalEl.addEventListener('toggle', () => {
 				if (modalEl?.matches(':popover-open') && inputEl) {
 					inputEl.focus();
 				}
