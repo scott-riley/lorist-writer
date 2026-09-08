@@ -101,6 +101,7 @@
 	let hasWeeklyWordGoal = $state(folder.hasWeeklyWordGoal);
 	// svelte-ignore state_referenced_locally
 	let weeklyWordGoal = $state(folder.weeklyWordGoal);
+	let isActive = $derived(page.url.pathname === `/f/${folder.id}`);
 
 	const postsQuery = stateQuery(() => getFolderPosts(folder.id));
 	// eslint-disable-next-line svelte/prefer-writable-derived -- $derived makes svelte-dnd-action shit the bed
@@ -134,6 +135,7 @@
 			expanded = false;
 		}
 	});
+
 	// focus and select the rename input when added to dom
 	function init(el: HTMLInputElement) {
 		el.focus();
@@ -268,6 +270,7 @@
 	class:expanded
 	data-folder-id={folder.id}
 	class:drag-hover={dragState.isDraggingPost && dragState.hoveredFolderId === folder.id}
+	class:active={isActive}
 >
 	<div class="menu-item-name">
 		<button
@@ -287,7 +290,10 @@
 				<input type="text" class="mimic-button ghost name-text" bind:value={folderName} use:init />
 			</form>
 		{:else}
-			<div class="mimic-button ghost name-text">{folder.name}</div>
+			<a
+				href={resolve('/f/[slug]', { slug: String(folder.id) })}
+				class="mimic-button ghost name-text">{folder.name}</a
+			>
 		{/if}
 	</div>
 	{#if !isRenaming}
@@ -322,9 +328,12 @@
 					<span>Change icon</span>
 					<i class="hgi hgi-stroke hgi-rounded hgi-arrow-right-01"></i>
 				</button>
-				<button class="ghost" popovertarget={`folder-settings-popover--${folder.id}`}>
+				<button
+					class="ghost section-divider"
+					popovertarget={`folder-settings-popover--${folder.id}`}
+				>
 					<i class="hgi hgi-stroke hgi-rounded hgi-target-02"></i>
-					<span>Set goals</span>
+					<span>{folder.hasWeeklyWordGoal || folder.hasWordGoal ? 'Edit goals' : 'Set goals'}</span>
 				</button>
 				<button class="ghost" onclick={deleteFolder}>
 					<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>

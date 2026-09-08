@@ -81,15 +81,6 @@
 	</div>
 	<div class="sidebar-bottom">
 		<div class="menu-items">
-			<a class="menu-item" href={resolve('/stats')} aria-current={page.url.pathname === '/stats'}>
-				<div class="menu-item-name">
-					<div class="mimic-button ghost icon large menu-item-icon">
-						<i class="hgi hgi-stroke hgi-rounded hgi-chart-breakout-square"></i>
-					</div>
-					<span class="ghost name-text">Writing Stats</span>
-				</div>
-			</a>
-
 			<a class="menu-item" href={resolve('/trash')} aria-current={page.url.pathname === '/trash'}>
 				<div class="menu-item-name">
 					<div class="mimic-button ghost icon large menu-item-icon">

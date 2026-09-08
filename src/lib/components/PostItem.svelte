@@ -43,7 +43,7 @@
 			</span>
 		{/if}
 		<a class="button ghost name-text" href={postHref}>
-		    {post.title ? post.title : 'New document'}
+			{post.title ? post.title : 'New document'}
 		</a>
 	</div>
 	<div class="menu-item-actions">
@@ -61,7 +61,7 @@
 			popover="auto"
 			style={`position-anchor: ${anchorName}`}
 		>
-			<button class="ghost two-icon" onclick={togglePinned}>
+			<button class="ghost two-icon section-divider" onclick={togglePinned}>
 				<div>
 					<i class="hgi hgi-stroke hgi-rounded hgi-pin"></i>
 					<span>Pin to top</span>

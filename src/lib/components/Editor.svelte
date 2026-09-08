@@ -15,7 +15,7 @@
 	import { toDateKey } from '$lib/utils/weeks';
 	import { logError } from '$lib/utils/errors';
 	import WordCount from '$lib/components/WordCount.svelte';
-	import NoPostIllo from './icons/NoPostIllo.svelte';
+	import NoPostIllo from '$lib/components/icons/NoPostIllo.svelte';
 
 	type EditorFont = 'sans' | 'serif' | 'mono' | 'dys';
 
