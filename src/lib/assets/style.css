@@ -253,6 +253,19 @@ button,
 		font-weight: 444;
 		box-shadow: var(--shadow-elevation-low);
 	}
+	&.section-divider {
+		position: relative;
+		margin-bottom: var(--space-3xs);
+		&:after {
+			content: '';
+			height: 1px;
+			background: var(--color-border);
+			position: absolute;
+			bottom: calc((var(--space-3xs) / 2 * -1) - 1px);
+			left: calc(var(--space-3xs) * -1);
+			right: calc(var(--space-3xs) * -1);
+		}
+	}
 }
 
 .section-header {
@@ -395,9 +408,6 @@ button,
 	}
 }
 
-.more-icon[popovertarget] {
-	/*anchor-name: --more-button;*/
-}
 .popover-menu {
 	flex-direction: column;
 	position: fixed;

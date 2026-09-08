@@ -134,6 +134,7 @@
 			expanded = false;
 		}
 	});
+
 	// focus and select the rename input when added to dom
 	function init(el: HTMLInputElement) {
 		el.focus();
@@ -322,9 +323,12 @@
 					<span>Change icon</span>
 					<i class="hgi hgi-stroke hgi-rounded hgi-arrow-right-01"></i>
 				</button>
-				<button class="ghost" popovertarget={`folder-settings-popover--${folder.id}`}>
+				<button
+					class="ghost section-divider"
+					popovertarget={`folder-settings-popover--${folder.id}`}
+				>
 					<i class="hgi hgi-stroke hgi-rounded hgi-target-02"></i>
-					<span>Set goals</span>
+					<span>{folder.hasWeeklyWordGoal || folder.hasWordGoal ? 'Edit goals' : 'Set goals'}</span>
 				</button>
 				<button class="ghost" onclick={deleteFolder}>
 					<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
