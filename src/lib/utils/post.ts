@@ -1,4 +1,4 @@
-export function getTitleString(content) {
+export function getTitleString(content: JSON) {
 	const defaultTitle = 'New document';
 	if (!content) {
 		return defaultTitle;
@@ -16,7 +16,7 @@ export function getTitleString(content) {
 	const firstBlock = json?.content?.[0];
 
 	const fullText = firstBlock?.content
-		?.map((node) => node.text ?? '')
+		?.map((node: { text: string }) => node.text ?? '')
 		.join('')
 		.trim();
 

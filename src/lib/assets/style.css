@@ -733,6 +733,62 @@ code {
 	justify-content: center;
 	height: 100%;
 	width: 100%;
+	.weekly-goal + & {
+		height: auto;
+		text-align: left;
+		border: 1px solid var(--color-border-mid);
+		box-shadow: var(--shadow-elevation-medium);
+		width: min(70vw, 980px);
+		margin: auto;
+		border-radius: var(--radius-m);
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		.empty-icon {
+			margin-bottom: 0;
+			margin-top: 0;
+			height: auto;
+			display: flex;
+			flex-direction: row;
+			align-items: end;
+			padding: var(--space-m);
+			:global(svg) {
+				height: auto;
+				aspect-ratio: 1/1;
+				min-width: 100%;
+			}
+		}
+		.empty-content {
+			padding: var(--space-s) var(--space-l) var(--space-l) var(--space-l);
+			display: flex;
+			flex-direction: column;
+			align-items: start;
+			justify-content: space-between;
+			width: 100%;
+			& > div {
+				flex: 1;
+				width: 100%;
+			}
+			h2 {
+				font-weight: 640;
+				font-size: var(--step-4);
+				margin: 0;
+			}
+			p {
+				margin: 0;
+				font-size: var(--step-2);
+			}
+		}
+		h2 {
+			text-align: left;
+			margin-bottom: 0;
+			[data-theme='dark'] & {
+				margin-top: var(--space-m);
+			}
+		}
+		p {
+			text-align: left;
+		}
+	}
 	p {
 		font-size: var(--step-1);
 		max-width: 520px;
@@ -757,11 +813,11 @@ code {
 			svg path {
 				fill: var(--color-bg);
 			}
-			/*padding: var(--space-m);*/
 		}
 	}
 	h2 {
 		font-size: var(--step-3);
+		text-align: center;
 		margin: 0;
 	}
 	button {

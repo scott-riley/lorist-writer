@@ -101,6 +101,7 @@
 	let hasWeeklyWordGoal = $state(folder.hasWeeklyWordGoal);
 	// svelte-ignore state_referenced_locally
 	let weeklyWordGoal = $state(folder.weeklyWordGoal);
+	let isActive = $derived(page.url.pathname === `/f/${folder.id}`);
 
 	const postsQuery = stateQuery(() => getFolderPosts(folder.id));
 	// eslint-disable-next-line svelte/prefer-writable-derived -- $derived makes svelte-dnd-action shit the bed
@@ -269,6 +270,7 @@
 	class:expanded
 	data-folder-id={folder.id}
 	class:drag-hover={dragState.isDraggingPost && dragState.hoveredFolderId === folder.id}
+	class:active={isActive}
 >
 	<div class="menu-item-name">
 		<button
@@ -288,7 +290,10 @@
 				<input type="text" class="mimic-button ghost name-text" bind:value={folderName} use:init />
 			</form>
 		{:else}
-			<div class="mimic-button ghost name-text">{folder.name}</div>
+			<a
+				href={resolve('/f/[slug]', { slug: String(folder.id) })}
+				class="mimic-button ghost name-text">{folder.name}</a
+			>
 		{/if}
 	</div>
 	{#if !isRenaming}

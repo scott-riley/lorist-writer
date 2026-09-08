@@ -4,6 +4,6 @@ export async function getFolderPosts(folderId: number): Promise<Post[]> {
 	return db.posts
 		.where('folderID')
 		.equals(folderId)
-		.filter((p) => p.deletedAt === null)
+		.filter((p) => p.deletedAt == null)
 		.sortBy('sortKey');
 }
