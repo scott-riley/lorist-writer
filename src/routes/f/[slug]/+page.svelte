@@ -129,6 +129,14 @@
 				aspect-ratio: 1/1;
 				min-width: 100%;
 			}
+			:global([data-theme='dark']) & {
+				background: var(--color-text-standout);
+				opacity: 0.8;
+				border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+				overflow: hidden;
+				animation: blob-morph 12s ease-in-out infinite;
+				margin: var(--space-m);
+			}
 		}
 		.progress-readout {
 			background: var(--color-bg-dim);
