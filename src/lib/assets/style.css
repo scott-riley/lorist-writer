@@ -163,16 +163,17 @@ body {
 	background: var(--color-bg);
 }
 
-.icon-thin {
-	stroke-width: 0.2px;
-}
-
-.icon-regular {
-	stroke-width: 1.5px;
-}
-
-.icon-bold {
-	stroke-width: 2px;
+.ui {
+	@media (max-width: 1030px) {
+		/* sidebar breakpoint */
+		padding-left: calc(var(--space-m) + 60px);
+		padding-right: var(--space-m);
+	}
+	@media (max-width: 600px) {
+		flex-direction: column;
+		padding-left: 0;
+		padding-right: 0;
+	}
 }
 
 button,
@@ -439,7 +440,7 @@ button,
 	padding: var(--space-2xs) var(--space-m);
 	position: absolute;
 	background: var(--color-bg);
-	right: 0;
+	right: 12px;
 	top: 0;
 	border-bottom-left-radius: var(--radius-m);
 	z-index: 2;
@@ -466,6 +467,12 @@ button,
 		padding-bottom: var(--space-l);
 		-webkit-font-smoothing: antiliased;
 		-moz-osx-font-smoothing: grayscale;
+		@media (max-width: 600px) {
+			padding-left: var(--space-s);
+			padding-right: var(--space-s);
+			padding-bottom: var(--space-3xl);
+			padding-top: 0;
+		}
 	}
 	:scope.editor-font--mono {
 		--step--2: clamp(0.651rem, 0.6228rem + 0.1254vw, 0.72rem);
@@ -496,6 +503,7 @@ button,
 		}
 		p {
 			line-height: 1.77;
+			max-width: 100%;
 		}
 	}
 	:scope.editor-font--serif {
@@ -512,11 +520,13 @@ button,
 		--step-5: clamp(6.3592rem, 6.0701rem + 1.2847vw, 7.0657rem);
 		p {
 			line-height: 1.47;
+			max-width: 58ch;
 		}
 		h1 {
 			font-weight: 900;
 			line-height: 1.1;
 			font-style: italic;
+			margin-bottom: var(--space-m);
 		}
 		h2 {
 			font-weight: 700;
@@ -549,6 +559,7 @@ button,
 		}
 		p {
 			line-height: 1.57;
+			max-width: 100%;
 		}
 	}
 	.tiptap {
@@ -578,6 +589,7 @@ button,
 		position: relative;
 		color: var(--color-text-standout);
 		font-family: var(--editor-font-family-heading);
+		line-height: 1.2;
 	}
 	h1 {
 		font-size: var(--step-3);
@@ -654,6 +666,7 @@ button,
 		color: var(--color-text);
 		line-height: 1.45;
 		font-weight: var(--editor-font-weight--normal);
+		max-width: 60ch;
 	}
 	pre {
 		padding: var(--space-m);
