@@ -6,6 +6,7 @@
 
 	import Folders from '$lib/components/Folders.svelte';
 	import Pinned from '$lib/components/Pinned.svelte';
+	import ModKey from './ModKey.svelte';
 
 	let {
 		toggleTheme,
@@ -27,7 +28,11 @@
 			collapsed = true;
 		}
 		function handleKeydown(e: KeyboardEvent) {
-			if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+			if (
+				(navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey) &&
+				e.shiftKey &&
+				e.key.toLowerCase() === 'e'
+			) {
 				e.preventDefault();
 				toggleSidebar();
 			}
@@ -69,7 +74,7 @@
 					>
 						{collapsed ? 'Expand' : 'Collapse'} sidebar
 						<span class="shortcut">
-							<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+							<ModKey key="meta" />
 							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-big-up-dash"></i>
 							<span class="letter-key">E</span>
 						</span>
@@ -183,6 +188,9 @@
 			background: var(--color-bg);
 			box-shadow: var(--shadow-elevation-medium);
 			width: clamp(340px, 20.5vw, 380px);
+			:global([theme='dark']) & {
+				box-shadow: var(--shadow-elevation-high);
+			}
 		}
 		@media (max-width: 600px) {
 			position: relative;

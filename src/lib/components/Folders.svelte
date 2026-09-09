@@ -10,6 +10,7 @@
 	import { logError } from '$lib/utils/errors';
 	import type { DragState } from '$lib/types/drag-state';
 	import FolderItem from '$lib/components/FolderItem.svelte';
+	import ModKey from './ModKey.svelte';
 
 	// ui state
 	let isAdding = $state(false);
@@ -142,7 +143,7 @@
 				<div class="tooltip" style="position-anchor: --search-button; position-area: center right;">
 					Go to…
 					<span class="shortcut">
-						<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+						<ModKey key="meta" />
 						<span class="letter-key">K</span>
 					</span>
 				</div>

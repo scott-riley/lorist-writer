@@ -93,7 +93,7 @@
 
 	onMount(() => {
 		function handleGlobalKeydown(e: KeyboardEvent) {
-			if (e.metaKey && e.key === 'k') {
+			if ((navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey) && e.key === 'k') {
 				e.preventDefault();
 				if (open) {
 					closePalette();
