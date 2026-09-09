@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { stateQuery } from 'dexie-svelte-query';
 
 	import { Editor } from '@tiptap/core';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
 	import TurndownService from 'turndown';
 	import 'highlight.js/styles/github-dark.css';
+	import JSConfetti from 'js-confetti';
 
 	import { browser } from '$app/environment';
 
@@ -34,14 +36,18 @@
 	let focusMode = $state(false);
 
 	let post = $state<Post | null>(null);
-	let folder = $state<Folder | null>(null);
 	let isDeleted = $state(false);
-	let wordGoal = $state<number | null>(null);
 	let hasPost = $state<boolean | null>(null);
 	let bubble = $state<HTMLDivElement | null>(null);
 	let linkUrl = $state('');
 	let linkInput = $state<HTMLInputElement | null>(null);
 	let linkPopover = $state<HTMLDivElement | null>(null);
+	let jsConfetti: JSConfetti;
+	let goalHit = $state(false);
+
+	const folderQuery = $derived(stateQuery(() => db.folders.get(post?.folderID ?? -1)));
+	const folder = $derived(folderQuery.current ?? null);
+	const wordGoal = $derived(folder?.hasWordGoal ? folder.wordGoal : null);
 
 	const isActiveMark = (name: string, attrs = {}) => {
 		void editorVersion; // create reactive dependency
@@ -186,6 +192,8 @@
 	}
 
 	onMount(() => {
+		jsConfetti = new JSConfetti();
+
 		function handleKeydown(e: KeyboardEvent) {
 			if (e.metaKey && e.key === '/') {
 				e.preventDefault();
@@ -204,10 +212,9 @@
 			post = loadedPost;
 			await tick();
 			hasPost = true;
+			await tick(); // liberally throwing tick() around like i know what i am doing (i do not ((but it worked)))
 			isDeleted = !!post.deletedAt;
 
-			folder = (await db.folders.where('id').equals(post.folderID).first()) ?? null;
-			wordGoal = folder?.hasWordGoal ? folder.wordGoal : null;
 			const fullExtensions = [...editorExtensions, BubbleMenu.configure({ element: bubble })];
 			editor = new Editor({
 				element,
@@ -227,7 +234,23 @@
 				onTransaction: () => {
 					editorVersion += 1;
 				},
-				onUpdate: () => scheduleSave()
+				onUpdate: () => {
+					scheduleSave();
+
+					if (wordGoal) {
+						const currentWordCount = editor?.storage.characterCount?.words() ?? 0;
+						if (currentWordCount >= wordGoal && !goalHit) {
+							goalHit = true;
+							jsConfetti.addConfetti({
+								emojis: ['🦄', '🌈', '❤️', '🏳️‍⚧️'],
+								emojiSize: 40,
+								confettiNumber: 300
+							});
+						} else if (currentWordCount < wordGoal) {
+							goalHit = false;
+						}
+					}
+				}
 			});
 		})();
 
