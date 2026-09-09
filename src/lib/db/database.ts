@@ -26,7 +26,7 @@ interface Post {
 	sortKey: string;
 	wordCount: number;
 	deletedAt: number | null;
-  isPinned: boolean;
+	isPinned: boolean;
 }
 
 interface DailyWordCount {
@@ -84,7 +84,7 @@ async function seedOnboardingContent() {
 		content: JSON.stringify(starterContent),
 		sortKey: postSortKey,
 		wordCount: 0,
-    deletedAt: null,
+		deletedAt: null,
 		isPinned: false
 	});
 

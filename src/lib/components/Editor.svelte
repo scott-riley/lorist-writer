@@ -11,7 +11,7 @@
 
 	import { browser } from '$app/environment';
 
-	import { db, GLOBAL_FOLDER_ID, type Folder, type Post } from '$lib/db/database';
+	import { db, GLOBAL_FOLDER_ID, type Post } from '$lib/db/database';
 	import { incrementDailyCount } from '$lib/data/counts';
 	import { editorExtensions } from '$lib/utils/editor';
 	import { getTitleString } from '$lib/utils/post';
@@ -212,8 +212,8 @@
 			post = loadedPost;
 			await tick();
 			hasPost = true;
-			await tick(); // liberally throwing tick() around like i know what i am doing (i do not ((but it worked)))
 			isDeleted = !!post.deletedAt;
+			await tick(); // liberally throwing tick() around like i know what i am doing (i do not ((but it worked)))
 
 			const fullExtensions = [...editorExtensions, BubbleMenu.configure({ element: bubble })];
 			editor = new Editor({

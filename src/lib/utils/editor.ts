@@ -14,6 +14,8 @@ import { createLowlight, common } from 'lowlight';
 const lowlight = createLowlight(common);
 
 // https://tiptap.dev/docs/editor/markdown/examples
+// TODO: export this and use it in Editor
+// TODO: add callback so Editor can save frontmatter to active post
 const PasteMarkdown = Extension.create({
 	name: 'pasteMarkdown',
 
@@ -31,8 +33,9 @@ const PasteMarkdown = Extension.create({
 
 						// Check if text looks like Markdown
 						if (editor.markdown && looksLikeMarkdown(text)) {
+							const stripped = stripFrontMatter(text);
 							// Parse the Markdown text to Tiptap JSON using the Markdown manager
-							const json = editor.markdown.parse(text);
+							const json = editor.markdown.parse(stripped.text);
 
 							// Insert the parsed JSON content at cursor position
 							editor.commands.insertContent(json);
@@ -47,14 +50,31 @@ const PasteMarkdown = Extension.create({
 	}
 });
 
+// https://huam.ing/how-to-remove-markdown-frontmatter-programmatically/
+function stripFrontMatter(text: string): { text: string; fm: string | null } {
+	// split into exactly three sections, we don't want to fuck up any `---` instances in body
+	// e.g. markdown hr’s, code comments, ascii art of anime twinks
+	const [, chunkOne, chunkTwo] = text.split('---', 3);
+	if (chunkOne === undefined || chunkTwo === undefined) {
+		// if we don't specifically have two chunks, spit the text back out
+		return { text, fm: null };
+	}
+	return {
+		fm: chunkOne.trim(),
+		text: chunkTwo.trimStart()
+	};
+}
+
 function looksLikeMarkdown(text: string): boolean {
 	// Simple heuristic: check for Markdown syntax
 	return (
 		/^#{1,6}\s/.test(text) || // Headings
 		/\*\*[^*]+\*\*/.test(text) || // Bold
 		/\[.+\]\(.+\)/.test(text) || // Links
-		/^[-*+]\s/.test(text)
-	); // Lists
+		/^[-*+]\s/.test(text) || // Lists
+		text.startsWith('---\n') ||
+		text.startsWith('---\r\n') // Frontmatter
+	);
 }
 
 export const editorExtensions = [
