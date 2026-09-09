@@ -122,11 +122,11 @@
 
 <div class="modal command-palette" id="command-palette" popover bind:this={modalEl}>
 	<div class="command-palette-header">
-		<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
+		<i class="hgi hgi-stroke hgi-rounded hgi-ai-search-01"></i>
 		<input
 			bind:this={inputEl}
 			type="text"
-			placeholder="Jump to a document…"
+			placeholder="Jump to a document or folder…"
 			bind:value={query}
 			onkeydown={handleInputKeydown}
 		/>
@@ -146,7 +146,7 @@
 							{folder.name}
 						</div>
 						<div class="command-item-go">
-							<span>Open</span>
+							<span>Go</span>
 							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
 						</div>
 					</button>
@@ -165,14 +165,14 @@
 							{post.title}
 						</div>
 						<div class="command-item-go">
-							<span>Open</span>
+							<span>Go</span>
 							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
 						</div>
 					</button>
 				</li>
 			{/each}
 		{:else}
-			<li class="command-empty">No matching documents</li>
+			<li class="command-empty">No matching items</li>
 		{/if}
 	</ul>
 </div>
