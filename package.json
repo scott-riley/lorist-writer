@@ -51,6 +51,7 @@
 		"dexie-svelte-query": "^1.0.0",
 		"file-saver": "^2.0.5",
 		"fractional-indexing": "^4.0.0",
+		"js-confetti": "^0.13.1",
 		"jszip": "^3.10.1",
 		"layerchart": "^2.4.0",
 		"lowlight": "^3.3.0",

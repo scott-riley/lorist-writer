@@ -22,7 +22,7 @@ const PasteMarkdown = Extension.create({
 		return [
 			new Plugin({
 				props: {
-					handlePaste(view, event, slice) {
+					handlePaste(_view, event) {
 						const text = event.clipboardData?.getData('text/plain');
 
 						if (!text) {
@@ -31,7 +31,6 @@ const PasteMarkdown = Extension.create({
 
 						// Check if text looks like Markdown
 						if (editor.markdown && looksLikeMarkdown(text)) {
-							const { state, dispatch } = view;
 							// Parse the Markdown text to Tiptap JSON using the Markdown manager
 							const json = editor.markdown.parse(text);
 
@@ -60,7 +59,8 @@ function looksLikeMarkdown(text: string): boolean {
 
 export const editorExtensions = [
 	StarterKit.configure({
-		codeBlock: false
+		codeBlock: false,
+		link: false
 	}),
 	Markdown,
 	PasteMarkdown,
@@ -163,7 +163,7 @@ export const editorExtensions = [
 				};
 			});
 		},
-		onPaste: (currentEditor, files, htmlContent) => {
+		onPaste: (currentEditor, files) => {
 			files.forEach((file) => {
 				const fileReader = new FileReader();
 				fileReader.readAsDataURL(file);
