@@ -463,6 +463,8 @@ button,
 		overflow: auto;
 		padding-top: var(--space-l);
 		padding-bottom: var(--space-l);
+		-webkit-font-smoothing: antiliased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 	:scope.editor-font--mono {
 		--step--2: clamp(0.651rem, 0.6228rem + 0.1254vw, 0.72rem);
@@ -477,16 +479,17 @@ button,
 		--editor-font-family-body: var(--font-family-mono);
 		--editor-font-family-heading: var(--font-family-mono);
 		h1 {
-			font-size: var(--step-5);
+			font-size: var(--step-4);
 			font-weight: 666;
 			font-style: italic;
 		}
 		h2 {
 			font-style: italic;
 			font-weight: 666;
-			font-size: var(--step-3);
+			font-size: var(--step-2);
 		}
 		h3 {
+			font-size: var(--step-1);
 			font-weight: 400;
 			font-style: italic;
 		}
@@ -503,7 +506,6 @@ button,
 		}
 		h1 {
 			font-weight: 760;
-			font-style: italic;
 			font-size: var(--step-4);
 			line-height: 1.1;
 		}
@@ -562,18 +564,18 @@ button,
 		font-family: var(--editor-font-family-heading);
 	}
 	h1 {
-		font-size: var(--step-4);
-		font-weight: 760;
+		font-size: var(--step-3);
+		font-weight: 840;
 		margin-bottom: var(--space-2xs);
 	}
 	h2 {
-		font-size: var(--step-3);
+		font-size: var(--step-2);
 		margin-bottom: var(--space-2xs);
 		margin-top: var(--space-l);
 		font-weight: 760;
 	}
 	h3 {
-		font-size: var(--step-2);
+		font-size: var(--step-1);
 		margin-top: var(--space-m);
 		margin-bottom: var(--space-3xs);
 	}

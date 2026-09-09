@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	import { Editor } from '@tiptap/core';
+	import BubbleMenu from '@tiptap/extension-bubble-menu';
 	import TurndownService from 'turndown';
 	import 'highlight.js/styles/github-dark.css';
 
@@ -37,6 +38,15 @@
 	let isDeleted = $state(false);
 	let wordGoal = $state<number | null>(null);
 	let hasPost = $state<boolean | null>(null);
+	let bubble = $state<HTMLDivElement | null>(null);
+	let linkUrl = $state('');
+	let linkInput = $state<HTMLInputElement | null>(null);
+	let linkPopover = $state<HTMLDivElement | null>(null);
+
+	const isActiveMark = (name: string, attrs = {}) => {
+		void editorVersion; // create reactive dependency
+		return editor?.isActive(name, attrs) ?? false;
+	};
 
 	let editor = $state<Editor | null>(null);
 
@@ -53,13 +63,46 @@
 	let statusMessage = $state<string | null>(null);
 	let statusTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	// debounce saving, every 2s
+	function handleLinkPopoverToggle(e: Event) {
+		// only act when it's opening, not closing
+		if ((e as ToggleEvent).newState !== 'open') return;
+		linkUrl = editor?.getAttributes('link').href ?? '';
+		tick().then(() => linkInput?.focus());
+	}
+
+	function applyLink() {
+		if (!editor) return;
+		const url = linkUrl.trim();
+		if (url === '') {
+			editor.chain().focus().unsetLink().run();
+		} else {
+			editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+		}
+		linkPopover?.hidePopover();
+	}
+
+	function removeLink() {
+		editor?.chain().focus().unsetLink().run();
+		linkPopover?.hidePopover();
+	}
+
+	function handleLinkKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			applyLink();
+		} else if (e.key === 'Escape') {
+			e.preventDefault();
+			linkPopover?.hidePopover();
+		}
+	}
+
+	// debounce saving, every 400ms
 	function scheduleSave() {
 		if (!editor) return;
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(() => {
 			void saveEditorContent();
-		}, 2000);
+		}, 400);
 	}
 
 	function prettifyHTML(html: string) {
@@ -159,16 +202,28 @@
 			}
 
 			post = loadedPost;
+			await tick();
 			hasPost = true;
 			isDeleted = !!post.deletedAt;
 
 			folder = (await db.folders.where('id').equals(post.folderID).first()) ?? null;
 			wordGoal = folder?.hasWordGoal ? folder.wordGoal : null;
-
+			const fullExtensions = [...editorExtensions, BubbleMenu.configure({ element: bubble })];
 			editor = new Editor({
 				element,
-				extensions: editorExtensions,
+				extensions: fullExtensions,
 				content: post.content ? JSON.parse(post.content) : null,
+				editorProps: {
+					handleClick(view, pos, event) {
+						const target = event.target as HTMLElement;
+						const link = target.closest('a');
+						if (link && !(event.metaKey || event.ctrlKey)) {
+							event.preventDefault();
+							return true; // tell ProseMirror this click was handled
+						}
+						return false;
+					}
+				},
 				onTransaction: () => {
 					editorVersion += 1;
 				},
@@ -208,6 +263,78 @@
 {:else}
 	<div class="app">
 		<div class="editor-ui">
+			<div id="bubble-menu" class="bubble-menu" bind:this={bubble}>
+				<button
+					onclick={() => editor?.chain().focus().toggleBold().run()}
+					class:active={isActiveMark('bold')}
+					aria-label="bold"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-bold"></i>
+				</button>
+				<button
+					onclick={() => editor?.chain().focus().toggleItalic().run()}
+					class:active={isActiveMark('italic')}
+					aria-label="italic"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-italic"></i>
+				</button>
+				<button
+					onclick={() => editor?.chain().focus().toggleUnderline().run()}
+					class:active={isActiveMark('underline')}
+					aria-label="underline"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-underline"></i>
+				</button>
+				<button
+					onclick={() => editor?.chain().focus().toggleStrike().run()}
+					class:active={isActiveMark('strike')}
+					aria-label="strikethrough"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-strikethrough"></i>
+				</button>
+				<button
+					onclick={() => editor?.chain().focus().toggleCode().run()}
+					class:active={isActiveMark('code')}
+					aria-label="inline code"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-code"></i>
+				</button>
+				<button
+					class="ghost"
+					class:active={isActiveMark('link')}
+					popovertarget="link-popover"
+					style="anchor-name: --link-button"
+					aria-label="link"
+				>
+					<i class="hgi hgi-stroke hgi-rounded hgi-link-04"></i>
+				</button>
+
+				<div
+					id="link-popover"
+					class="popover-menu link-editor"
+					popover
+					bind:this={linkPopover}
+					ontoggle={handleLinkPopoverToggle}
+				>
+					<input
+						bind:this={linkInput}
+						bind:value={linkUrl}
+						type="url"
+						placeholder="https://example.com"
+						onkeydown={handleLinkKeydown}
+					/>
+					<div class="link-actions">
+						<button onclick={applyLink} popovertarget="link-popover" popovertargetaction="hide">
+							Save link
+						</button>
+						{#if isActiveMark('link')}
+							<button onclick={removeLink} popovertarget="link-popover" popovertargetaction="hide">
+								Remove link
+							</button>
+						{/if}
+					</div>
+				</div>
+			</div>
 			<div class="editor-controls">
 				{#if statusMessage}
 					<div class="status-message" transition:fly={{ x: 4, duration: 200 }}>
@@ -447,6 +574,72 @@
 	.loading i {
 		font-size: var(--step-4);
 		animation: spinner 1.5s linear infinite;
+	}
+	.bubble-menu {
+		background-color: var(--white);
+		border: 1px solid var(--gray-1);
+		border-radius: var(--radius-s);
+		box-shadow: var(--shadow-elevation-medium);
+		display: flex;
+		padding: var(--space-3xs);
+		gap: var(--space-3xs);
+		position: fixed;
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		z-index: 999;
+		visibility: hidden;
+		button {
+			background-color: unset;
+			padding: var(--space-3xs);
+			border-radius: var(--radius-s);
+			&:hover {
+				background-color: var(--color-bg-dim);
+			}
+
+			&.active {
+				background-color: var(--color-text);
+				color: var(--color-bg);
+			}
+		}
+	}
+	.link-button {
+		anchor-name: --link-button;
+	}
+	#link-popover {
+		position-anchor: --link-button;
+		position-area: bottom left;
+		transform: translateX(40px);
+	}
+	.link-editor {
+		gap: var(--space-3xs);
+		padding: 0;
+		&:popover-open {
+			display: flex;
+		}
+		input {
+			min-width: 200px;
+			width: 100%;
+			border: none;
+			border-bottom: 1px solid var(--color-border);
+			padding: var(--space-2xs);
+			margin: 0;
+			font-size: var(--step--1);
+			font-family: var(--font-family-mono);
+			&:focus {
+				outline: none;
+			}
+		}
+		.link-actions {
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+			padding: var(--space-3xs) var(--space-2xs);
+			padding-top: 0;
+			button {
+				flex: 1;
+				width: 100%;
+			}
+		}
 	}
 	@keyframes spinner {
 		to {

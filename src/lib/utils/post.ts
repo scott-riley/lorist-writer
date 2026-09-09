@@ -1,4 +1,4 @@
-export function getTitleString(content: JSON) {
+export function getTitleString(content: string | JSON) {
 	const defaultTitle = 'New document';
 	if (!content) {
 		return defaultTitle;
