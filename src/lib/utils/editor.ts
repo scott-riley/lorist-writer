@@ -13,14 +13,22 @@ import { createLowlight, common } from 'lowlight';
 
 const lowlight = createLowlight(common);
 
-// https://tiptap.dev/docs/editor/markdown/examples
-// TODO: export this and use it in Editor
-// TODO: add callback so Editor can save frontmatter to active post
-const PasteMarkdown = Extension.create({
-	name: 'pasteMarkdown',
+type FrontmatterHandler = (frontmatter: string) => void | Promise<void>;
 
+type PasteMarkdownOptions = {
+	onFrontmatter: FrontmatterHandler | null;
+};
+
+// https://tiptap.dev/docs/editor/markdown/examples
+export const PasteMarkdown = Extension.create<PasteMarkdownOptions>({
+	name: 'pasteMarkdown',
+	addOptions() {
+		return {
+			onFrontmatter: null
+		};
+	},
 	addProseMirrorPlugins() {
-		const { editor } = this;
+		const { editor, options } = this;
 		return [
 			new Plugin({
 				props: {
@@ -34,9 +42,11 @@ const PasteMarkdown = Extension.create({
 						// Check if text looks like Markdown
 						if (editor.markdown && looksLikeMarkdown(text)) {
 							const stripped = stripFrontMatter(text);
+							if (stripped.fm !== null) {
+								void options.onFrontmatter?.(stripped.fm);
+							}
 							// Parse the Markdown text to Tiptap JSON using the Markdown manager
 							const json = editor.markdown.parse(stripped.text);
-
 							// Insert the parsed JSON content at cursor position
 							editor.commands.insertContent(json);
 							return true;
@@ -83,7 +93,6 @@ export const editorExtensions = [
 		link: false
 	}),
 	Markdown,
-	PasteMarkdown,
 	TableKit,
 	Image,
 	TaskList,

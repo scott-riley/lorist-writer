@@ -27,6 +27,7 @@ interface Post {
 	wordCount: number;
 	deletedAt: number | null;
 	isPinned: boolean;
+	frontMatter?: string | null;
 }
 
 interface DailyWordCount {

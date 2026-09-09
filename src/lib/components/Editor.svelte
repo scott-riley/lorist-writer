@@ -13,7 +13,7 @@
 
 	import { db, GLOBAL_FOLDER_ID, type Post } from '$lib/db/database';
 	import { incrementDailyCount } from '$lib/data/counts';
-	import { editorExtensions } from '$lib/utils/editor';
+	import { editorExtensions, PasteMarkdown } from '$lib/utils/editor';
 	import { getTitleString } from '$lib/utils/post';
 	import { toDateKey } from '$lib/utils/weeks';
 	import { logError } from '$lib/utils/errors';
@@ -208,14 +208,24 @@
 				hasPost = false;
 				return;
 			}
-
 			post = loadedPost;
 			await tick();
 			hasPost = true;
 			isDeleted = !!post.deletedAt;
 			await tick(); // liberally throwing tick() around like i know what i am doing (i do not ((but it worked)))
 
-			const fullExtensions = [...editorExtensions, BubbleMenu.configure({ element: bubble })];
+			const fullExtensions = [
+				...editorExtensions,
+				BubbleMenu.configure({ element: bubble }),
+				PasteMarkdown.configure({
+					onFrontmatter: async (frontMatter) => {
+						console.log('Adding front matter', frontMatter);
+						await db.posts.update(parseInt(postId), {
+							frontMatter
+						});
+					}
+				})
+			];
 			editor = new Editor({
 				element,
 				extensions: fullExtensions,
@@ -285,6 +295,9 @@
 	</div>
 {:else}
 	<div class="app">
+		{#if post?.frontMatter}
+			FM: {post?.frontMatter}
+		{/if}
 		<div class="editor-ui">
 			<div id="bubble-menu" class="bubble-menu" bind:this={bubble}>
 				<button
