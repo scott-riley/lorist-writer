@@ -118,6 +118,11 @@
 			inputEl.focus();
 		}
 	});
+	// reset index on query change
+	$effect(() => {
+		void combinedItems;
+		selectedIndex = 0;
+	});
 </script>
 
 <div class="modal command-palette" id="command-palette" popover bind:this={modalEl}>
