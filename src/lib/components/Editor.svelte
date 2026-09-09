@@ -19,6 +19,7 @@
 	import { logError } from '$lib/utils/errors';
 	import WordCount from '$lib/components/WordCount.svelte';
 	import NoPostIllo from '$lib/components/icons/NoPostIllo.svelte';
+	import ModKey from './ModKey.svelte';
 
 	type EditorFont = 'sans' | 'serif' | 'mono' | 'dys';
 
@@ -195,7 +196,7 @@
 		jsConfetti = new JSConfetti();
 
 		function handleKeydown(e: KeyboardEvent) {
-			if (e.metaKey && e.key === '/') {
+			if ((navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey) && e.key === '/') {
 				e.preventDefault();
 				focusMode = !focusMode;
 			}
@@ -231,7 +232,7 @@
 				extensions: fullExtensions,
 				content: post.content ? JSON.parse(post.content) : null,
 				editorProps: {
-					handleClick(view, pos, event) {
+					handleClick(_view, _pos, event) {
 						const target = event.target as HTMLElement;
 						const link = target.closest('a');
 						if (link && !(event.metaKey || event.ctrlKey)) {
@@ -392,7 +393,7 @@
 					<div class="tooltip" style="position-anchor: --focus-mode-button">
 						Focus mode
 						<span class="shortcut">
-							<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+							<ModKey key="meta" />
 							<span class="letter-key">/</span>
 						</span>
 					</div>
