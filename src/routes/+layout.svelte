@@ -44,7 +44,7 @@
 		href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@1&display=swap"
 		rel="stylesheet"
 	/>
-	<link href="https://api.fontshare.com/v2/css?f[]=neco@1,2&display=swap" rel="stylesheet" />
+	<link href="https://api.fontshare.com/v2/css?f[]=rowan@1,2&display=swap" rel="stylesheet" />
 	<link
 		href="https://api.fontshare.com/v2/css?f[]=general-sans@1,2&display=swap"
 		rel="stylesheet"

@@ -63,7 +63,8 @@
 	/* Tokens */
 	--font-family-mono: 'Lilex', monospace;
 	--font-family-sans: 'Cabinet Grotesk', sans-serif;
-	--font-family-serif: 'Neco', sans-serif;
+	--font-family-serif: 'Rowan', serif;
+	--font-family-serif-heading: 'Rowan', serif;
 	--radius-xs: 2.5px;
 	--radius-s: 6px;
 	--radius-m: 12px;
@@ -455,7 +456,7 @@ button,
 		--step-4: clamp(2.7466rem, 2.2556rem + 2.182vw, 3.9467rem);
 		--step-5: clamp(3.4332rem, 2.6855rem + 3.3231vw, 5.2609rem);
 		--editor-font-weight--normal: 400;
-		--editor-font-family-body: 'General Sans', serif;
+		--editor-font-family-body: 'General Sans', sans-serif;
 		--editor-font-family-heading: 'Cabinet Grotesk', sans-serif;
 		flex: 1;
 		min-height: 0;
@@ -499,29 +500,44 @@ button,
 	}
 	:scope.editor-font--serif {
 		--editor-font-weight--normal: 400;
-		--editor-font-family-heading: var(--font-family-serif);
+		--editor-font-family-heading: var(--font-family-serif-heading);
 		--editor-font-family-body: var(--font-family-serif);
+		--step--2: clamp(0.5627rem, 0.5371rem + 0.1137vw, 0.6252rem);
+		--step--1: clamp(0.7956rem, 0.7595rem + 0.1607vw, 0.884rem);
+		--step-0: clamp(1.125rem, 1.0739rem + 0.2273vw, 1.25rem);
+		--step-1: clamp(1.5908rem, 1.5184rem + 0.3214vw, 1.7675rem);
+		--step-2: clamp(2.2493rem, 2.1471rem + 0.4544vw, 2.4992rem);
+		--step-3: clamp(3.1805rem, 3.036rem + 0.6425vw, 3.5339rem);
+		--step-4: clamp(4.4973rem, 4.2929rem + 0.9085vw, 4.997rem);
+		--step-5: clamp(6.3592rem, 6.0701rem + 1.2847vw, 7.0657rem);
 		p {
 			line-height: 1.47;
 		}
 		h1 {
-			font-weight: 760;
-			font-size: var(--step-4);
+			font-weight: 900;
 			line-height: 1.1;
+			font-style: italic;
 		}
 		h2 {
-			font-weight: 530;
-			font-style: italic;
+			font-weight: 700;
 		}
 		h3 {
 			font-style: italic;
-			font-weight: 420;
+			font-weight: 520;
 		}
 	}
 	:scope.editor-font--dys {
 		--editor-font-weight--normal: 400;
 		--editor-font-family-heading: 'OpenDyslexic';
 		--editor-font-family-body: 'OpenDyslexic';
+		--step--2: clamp(0.651rem, 0.6228rem + 0.1254vw, 0.72rem);
+		--step--1: clamp(0.7813rem, 0.7327rem + 0.2159vw, 0.9rem);
+		--step-0: clamp(0.9375rem, 0.8608rem + 0.3409vw, 1.125rem);
+		--step-1: clamp(1.125rem, 1.0099rem + 0.5114vw, 1.4063rem);
+		--step-2: clamp(1.35rem, 1.1832rem + 0.7415vw, 1.7578rem);
+		--step-3: clamp(1.62rem, 1.3838rem + 1.0496vw, 2.1973rem);
+		--step-4: clamp(1.944rem, 1.6157rem + 1.4592vw, 2.7466rem);
+		--step-5: clamp(2.3328rem, 1.8826rem + 2.0008vw, 3.4332rem);
 		h1 {
 			font-size: var(--step-3);
 		}
