@@ -6,7 +6,7 @@
 
 	import { stateQuery } from 'dexie-svelte-query';
 
-	import { db, type Post } from '$lib/db/database';
+	import { db, type Folder, type Post } from '$lib/db/database';
 	import { getTitleString } from '$lib/utils/post';
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
@@ -16,8 +16,12 @@
 	let modalEl = $state<HTMLDivElement>();
 
 	const postsQuery = stateQuery(() => db.posts.filter((post) => post.deletedAt === null).toArray());
+	const foldersQuery = stateQuery(() =>
+		db.folders.filter((folder) => folder.deletedAt === null).toArray()
+	);
 
 	let posts = $derived(postsQuery.current ?? []);
+	let folders = $derived(foldersQuery.current ?? []);
 
 	let filteredPosts = $derived(
 		query.trim() === ''
@@ -26,6 +30,18 @@
 					getTitleString(post.content).toLowerCase().includes(query.toLowerCase())
 				)
 	);
+
+	let filteredFolders = $derived(
+		query.trim() === ''
+			? folders
+			: folders.filter((folder) => folder.name.toLowerCase().includes(query.toLowerCase()))
+	);
+
+	type CommandItem = { type: 'folder'; item: Folder } | { type: 'post'; item: Post };
+	let combinedItems = $derived<CommandItem[]>([
+		...filteredFolders.map((folder) => ({ type: 'folder' as const, item: folder })),
+		...filteredPosts.map((post) => ({ type: 'post' as const, item: post }))
+	]);
 
 	function openPalette() {
 		open = true;
@@ -48,17 +64,27 @@
 		goto(resolve(`/p/[slug]`, { slug: String(post.id) }));
 	}
 
+	function goToFolder(folder: Folder) {
+		closePalette();
+		goto(resolve(`/f/[slug]`, { slug: String(folder.id) }));
+	}
+
 	function handleInputKeydown(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
-			selectedIndex = Math.min(selectedIndex + 1, filteredPosts.length - 1);
+			selectedIndex = Math.min(selectedIndex + 1, combinedItems.length - 1);
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
 			selectedIndex = Math.max(selectedIndex - 1, 0);
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
-			const post = filteredPosts[selectedIndex];
-			if (post) goToPost(post);
+			const selected = combinedItems[selectedIndex];
+			if (!selected) return;
+			if (selected.type === 'folder') {
+				goToFolder(selected.item);
+			} else {
+				goToPost(selected.item);
+			}
 		} else if (e.key === 'Escape') {
 			e.preventDefault();
 			closePalette();
@@ -96,36 +122,58 @@
 
 <div class="modal command-palette" id="command-palette" popover bind:this={modalEl}>
 	<div class="command-palette-header">
-		<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
+		<i class="hgi hgi-stroke hgi-rounded hgi-ai-search-01"></i>
 		<input
 			bind:this={inputEl}
 			type="text"
-			placeholder="Jump to a document…"
+			placeholder="Jump to a document or folder…"
 			bind:value={query}
 			onkeydown={handleInputKeydown}
 		/>
 	</div>
 	<ul class="command-list">
-		{#each filteredPosts as post, i (post.id)}
-			<li>
-				<button
-					class="command-item"
-					class:selected={i === selectedIndex}
-					onmouseenter={() => (selectedIndex = i)}
-					onclick={() => goToPost(post)}
-				>
-					<div class="command-item-name">
-						{post.title}
-					</div>
-					<div class="command-item-go">
-						<span>Open</span>
-						<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
-					</div>
-				</button>
-			</li>
+		{#if combinedItems.length}
+			{#each filteredFolders as folder, i (folder.id)}
+				<li>
+					<button
+						class="command-item"
+						class:selected={i === selectedIndex}
+						onmouseenter={() => (selectedIndex = i)}
+						onclick={() => goToFolder(folder)}
+					>
+						<i class={`hgi hgi-stroke hgi-rounded hgi-${folder.icon ?? 'folder-01'}`}></i>
+						<div class="command-item-name">
+							{folder.name}
+						</div>
+						<div class="command-item-go">
+							<span>Go</span>
+							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
+						</div>
+					</button>
+				</li>
+			{/each}
+			{#each filteredPosts as post, i (post.id)}
+				<li>
+					<button
+						class="command-item"
+						class:selected={filteredFolders.length + i === selectedIndex}
+						onmouseenter={() => (selectedIndex = filteredFolders.length + i)}
+						onclick={() => goToPost(post)}
+					>
+						<i class="hgi hgi-stroke hgi-rounded hgi-file-01"></i>
+						<div class="command-item-name">
+							{post.title}
+						</div>
+						<div class="command-item-go">
+							<span>Go</span>
+							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-turn-backward"></i>
+						</div>
+					</button>
+				</li>
+			{/each}
 		{:else}
-			<li class="command-empty">No matching documents</li>
-		{/each}
+			<li class="command-empty">No matching items</li>
+		{/if}
 	</ul>
 </div>
 
