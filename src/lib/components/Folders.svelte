@@ -134,13 +134,13 @@
 				</div>
 			</button>
 			<button
-				class="ghost icon"
+				class="ghost icon large"
 				popovertarget="command-palette"
 				style="anchor-name: --search-button"
 			>
-				<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
+				<i class="hgi hgi-stroke hgi-rounded hgi-ai-search-01"></i>
 				<div class="tooltip" style="position-anchor: --search-button; position-area: center right;">
-					Search posts
+					Go to…
 					<span class="shortcut">
 						<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
 						<span class="letter-key">K</span>

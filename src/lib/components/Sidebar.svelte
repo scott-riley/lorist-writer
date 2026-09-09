@@ -27,7 +27,7 @@
 			collapsed = true;
 		}
 		function handleKeydown(e: KeyboardEvent) {
-			if (e.metaKey && e.key.toLowerCase() === 'e') {
+			if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 'e') {
 				e.preventDefault();
 				toggleSidebar();
 			}
@@ -70,6 +70,7 @@
 						{collapsed ? 'Expand' : 'Collapse'} sidebar
 						<span class="shortcut">
 							<i class="hgi hgi-stroke hgi-rounded hgi-command"></i>
+							<i class="hgi hgi-stroke hgi-rounded hgi-arrow-big-up-dash"></i>
 							<span class="letter-key">E</span>
 						</span>
 					</div>
