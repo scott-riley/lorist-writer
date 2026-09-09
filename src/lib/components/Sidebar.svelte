@@ -82,7 +82,11 @@
 	</div>
 	<div class="sidebar-bottom">
 		<div class="menu-items">
-			<a class="menu-item" href={resolve('/trash')} aria-current={page.url.pathname === '/trash'}>
+			<a
+				class="menu-item trash-item"
+				href={resolve('/trash')}
+				aria-current={page.url.pathname === '/trash'}
+			>
 				<div class="menu-item-name">
 					<div class="mimic-button ghost icon large menu-item-icon">
 						<i class="hgi hgi-stroke hgi-rounded hgi-delete-03"></i>
@@ -140,6 +144,15 @@
 						<span class="ghost name-text">Credits</span>
 					</div>
 				</a>
+				<a class="menu-item" href="https://docs.lorist.app" target="_blank">
+					<div class="menu-item-name">
+						<div class="mimic-button ghost icon large menu-item-icon">
+							<i class="hgi hgi-stroke hgi-rounded hgi-mortarboard-02"></i>
+						</div>
+						<span class="ghost name-text">Documentation</span>
+						<i class="hgi hgi-stroke hgi-rounded hgi-external-link"></i>
+					</div>
+				</a>
 			</div>
 		</div>
 	</div>
@@ -162,17 +175,51 @@
 		justify-content: space-between;
 		overflow: auto;
 		transition: width 0.2s ease;
+		@media (max-width: 1030px) {
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 10;
+			background: var(--color-bg);
+			box-shadow: var(--shadow-elevation-medium);
+			width: clamp(340px, 20.5vw, 380px);
+		}
+		@media (max-width: 600px) {
+			position: relative;
+			width: 100%;
+			max-width: 100vw;
+		}
 		&.collapsed {
 			width: 60px;
+			box-shadow: none;
+			@media (max-width: 600px) {
+				height: 60px;
+				width: 100%;
+				z-index: 1;
+				.trash-item {
+					display: none;
+				}
+			}
 			.sidebar-header {
 				flex-direction: column;
 				gap: var(--space-xs);
+				@media (max-width: 600px) {
+					flex-direction: row;
+					justify-content: start;
+				}
 			}
 			:global(.pinned-items),
 			:global(.folders),
-			:global(.name-text),
-			:global([popovertarget='settings-more']) {
+			:global(.name-text) {
 				display: none;
+			}
+			:global([popovertarget='settings-more']) {
+				& > i {
+					display: none;
+				}
+			}
+			#settings-more .name-text {
+				display: block;
 			}
 			:global(.menu-item-name) {
 				transform: translate3d(-4px, 1.5px, 0);
