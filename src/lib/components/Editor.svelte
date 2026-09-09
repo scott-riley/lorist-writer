@@ -295,9 +295,6 @@
 	</div>
 {:else}
 	<div class="app">
-		{#if post?.frontMatter}
-			FM: {post?.frontMatter}
-		{/if}
 		<div class="editor-ui">
 			<div id="bubble-menu" class="bubble-menu" bind:this={bubble}>
 				<button
