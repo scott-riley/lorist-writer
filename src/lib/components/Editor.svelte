@@ -171,7 +171,11 @@
 	async function copyAsMarkdown() {
 		if (!editor) return;
 		try {
-			const markdown = turndownService.turndown(editor.getHTML());
+			let markdown = turndownService.turndown(editor.getHTML());
+			const fm = post?.frontMatter;
+			if (fm) {
+				markdown = `---\n${fm}\n---\n${markdown}`;
+			}
 			await navigator.clipboard.writeText(markdown);
 			setStatusMessage('Copied as Markdown');
 		} catch (error) {
