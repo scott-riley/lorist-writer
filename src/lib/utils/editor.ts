@@ -13,6 +13,17 @@ import { createLowlight, common } from 'lowlight';
 
 const lowlight = createLowlight(common);
 
+type TiptapNode = {
+	type?: string;
+	text?: string;
+	marks?: Array<{
+		type: string;
+		attrs?: Record<string, unknown>;
+	}>;
+	content?: TiptapNode[];
+	[key: string]: unknown;
+};
+
 type FrontmatterHandler = (frontmatter: string) => void | Promise<void>;
 
 type PasteMarkdownOptions = {
