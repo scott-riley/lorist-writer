@@ -19,6 +19,24 @@ type PasteMarkdownOptions = {
 	onFrontmatter: FrontmatterHandler | null;
 };
 
+function removeConflictingMarks(node: TiptapNode): TiptapNode {
+	const next = { ...node };
+
+	if (next.marks) {
+		const hasLink = next.marks.some((mark) => mark.type === 'link');
+
+		if (hasLink) {
+			next.marks = next.marks.filter((mark) => mark.type !== 'code');
+		}
+	}
+
+	if (next.content) {
+		next.content = next.content.map(removeConflictingMarks);
+	}
+
+	return next;
+}
+
 // https://tiptap.dev/docs/editor/markdown/examples
 export const PasteMarkdown = Extension.create<PasteMarkdownOptions>({
 	name: 'pasteMarkdown',
@@ -41,13 +59,17 @@ export const PasteMarkdown = Extension.create<PasteMarkdownOptions>({
 
 						// Check if text looks like Markdown
 						if (editor.markdown && looksLikeMarkdown(text)) {
+							event.preventDefault();
 							const stripped = stripFrontMatter(text);
 							if (stripped.fm !== null) {
 								void options.onFrontmatter?.(stripped.fm);
 							}
 							// Parse the Markdown text to Tiptap JSON using the Markdown manager
-							const json = editor.markdown.parse(stripped.text);
+							const parsed = editor.markdown.parse(stripped.text);
+							const json = removeConflictingMarks(parsed);
 							// Insert the parsed JSON content at cursor position
+							console.log('fm:', JSON.stringify(stripped.fm));
+							console.log('text going to parser:', JSON.stringify(stripped.text));
 							editor.commands.insertContent(json);
 							return true;
 						}
@@ -60,18 +82,32 @@ export const PasteMarkdown = Extension.create<PasteMarkdownOptions>({
 	}
 });
 
+const DELIMITER = '---';
+
 // https://huam.ing/how-to-remove-markdown-frontmatter-programmatically/
 function stripFrontMatter(text: string): { text: string; fm: string | null } {
-	// split into exactly three sections, we don't want to fuck up any `---` instances in body
-	// e.g. markdown hr’s, code comments, ascii art of anime twinks
-	const [, chunkOne, chunkTwo] = text.split('---', 3);
-	if (chunkOne === undefined || chunkTwo === undefined) {
-		// if we don't specifically have two chunks, spit the text back out
+	// does the text start with a frontmatter delimiter?
+	if (!text.startsWith(DELIMITER)) {
 		return { text, fm: null };
 	}
+
+	// look for the closing delimiter, starting the search just after the opening one
+	// so we don't get tripped up by later '---' instances in the body
+	// e.g. markdown hr's, code comments, ascii art of anime twinks
+	const searchFrom = DELIMITER.length;
+	const closingIndex = text.indexOf(DELIMITER, searchFrom);
+
+	if (closingIndex === -1) {
+		// frontmatter never closes, or it's just not frontmatter
+		return { text, fm: null };
+	}
+
+	const fm = text.slice(searchFrom, closingIndex).trim();
+	const body = text.slice(closingIndex + DELIMITER.length);
+
 	return {
-		fm: chunkOne.trim(),
-		text: chunkTwo.trimStart()
+		fm,
+		text: body.trimStart()
 	};
 }
 
