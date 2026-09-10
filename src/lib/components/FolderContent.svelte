@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { stateQuery } from 'dexie-svelte-query';
+
 	import { resolve } from '$app/paths';
+
 	import { db, type Folder, type Post } from '$lib/db/database';
 	import { getWeeklyWordCount } from '$lib/utils/week-count';
-	import Creative from '$lib/components/icons/Creative.svelte';
 	import { getFolderPosts } from '$lib/data/posts';
-	import GoalAchieved from './icons/GoalAchieved.svelte';
-	import NoPostIllo from './icons/NoPostIllo.svelte';
+
+	import GoalAchieved from '$lib/components/icons/GoalAchieved.svelte';
+	import NoPostIllo from '$lib/components/icons/NoPostIllo.svelte';
+	import Creative from '$lib/components/icons/Creative.svelte';
 
 	let { slug }: { slug: string } = $props();
 
@@ -17,6 +20,11 @@
 	const posts = $derived<Post[]>(postsQuery.current ?? []);
 
 	let currentWeeklyCount = $state(0);
+	let remainingWords = $derived<string>(
+		folder?.weeklyWordGoal
+			? (folder.weeklyWordGoal - currentWeeklyCount).toLocaleString()
+			: 'A few more'
+	);
 
 	async function countWeekly(folder: Folder) {
 		currentWeeklyCount = await getWeeklyWordCount(folder.id);
@@ -67,21 +75,18 @@
 						<p>
 							Your weekly goal in {folder.name}
 							{completedPercent === 100 ? 'was' : 'is'}
-							{folder.weeklyWordGoal} words.
+							{folder.weeklyWordGoal?.toLocaleString()} words.
 						</p>
 						<div class="progress-readout">
 							{#if completedPercent < 100}
 								<div class="completed" style={`width: ${completedPercent}%;`}>
 									<span
 										style={completedPercent > 20 ? 'transform: translate3d(20px, -50%, 0)' : null}
-										class:left={completedPercent < 15}>{currentWeeklyCount} words so far</span
+										class:left={completedPercent < 15}
+										>{currentWeeklyCount.toLocaleString()} words so far</span
 									>
 								</div>
-								<span class="to-go"
-									>{folder.weeklyWordGoal
-										? folder.weeklyWordGoal - currentWeeklyCount
-										: 'A few more'} to go</span
-								>
+								<span class="to-go"> {remainingWords} to go</span>
 							{:else}
 								<div class="completed" style={`width: ${completedPercent}%;`}>
 									<span class="yay" style="transform: translate3d(20px, -50%, 0)">
@@ -107,7 +112,7 @@
 				{#each posts as post (post.id)}
 					<a href={resolve('/p/[slug]', { slug: String(post.id) })} class="post-card">
 						<h4>{post.title ? post.title : 'New document'}</h4>
-						{post.wordCount ?? '0'} words
+						{post.wordCount.toLocaleString() ?? '0'} words
 					</a>
 				{/each}
 			</div>
