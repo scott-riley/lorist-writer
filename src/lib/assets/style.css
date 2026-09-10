@@ -444,6 +444,12 @@ button,
 	top: 0;
 	border-bottom-left-radius: var(--radius-m);
 	z-index: 2;
+	&.dimmed {
+		opacity: 0.2;
+		&:hover {
+			opacity: 1;
+		}
+	}
 }
 
 @scope (.editor) {
