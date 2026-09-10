@@ -366,7 +366,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="editor-controls">
+			<div class="editor-controls" class:dimmed={focusMode}>
 				{#if statusMessage}
 					<div class="status-message" transition:fly={{ x: 4, duration: 200 }}>
 						<i class="hgi hgi-stroke hgi-rounded hgi-tick-02"></i>
