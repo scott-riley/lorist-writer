@@ -11,7 +11,7 @@
 
 	import { browser } from '$app/environment';
 
-	import { db, GLOBAL_FOLDER_ID, type Post } from '$lib/db/database';
+	import { db, type Post } from '$lib/db/database';
 	import { incrementDailyCount } from '$lib/data/counts';
 	import { editorExtensions, PasteMarkdown } from '$lib/utils/editor';
 	import { getTitleString } from '$lib/utils/post';
@@ -147,10 +147,7 @@
 			});
 			// if we've got a positive word count
 			if (delta > 0) {
-				await Promise.all([
-					incrementDailyCount(date, post.folderID, delta),
-					incrementDailyCount(date, GLOBAL_FOLDER_ID, delta)
-				]);
+				await Promise.all([incrementDailyCount(date, post.folderID, delta)]);
 			}
 
 			post = { ...post, content, wordCount: newWordCount };
@@ -641,7 +638,7 @@
 	}
 	#link-popover {
 		position-anchor: --link-button;
-		position-area: bottom left;
+		position-area: top left;
 		transform: translateX(40px);
 	}
 	.link-editor {
