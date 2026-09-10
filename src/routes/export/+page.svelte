@@ -6,8 +6,6 @@
 
 	import { db } from '$lib/db/database';
 	import { editorExtensions } from '$lib/utils/editor';
-	import { Focus, Placeholder } from '@tiptap/extensions';
-	import { TaskList, TaskItem } from '@tiptap/extension-list';
 
 	const { saveAs } = fileSaver;
 	const turndownService = new TurndownService({
@@ -57,7 +55,7 @@
 		return markdown;
 	}
 
-	function safeParseContent(raw: string) {
+	function safeParseContent(raw: string | null) {
 		if (raw == null) return null;
 		if (typeof raw !== 'string') return raw;
 
@@ -80,7 +78,7 @@
 		for (const folder of folders) {
 			const folderName = sanitizeFolderName(folder.name);
 			const zipFolder = zip.folder(folderName);
-			const usedNames = new Set();
+			const usedNames = new Set<string>();
 
 			const folderPosts = posts.filter((post) => post.folderID === folder.id);
 
@@ -94,11 +92,16 @@
 
 				const title = post.title ? post.title : 'New document';
 				const suffix = post.deletedAt != null ? '--deleted' : '';
+				const fm = post.frontMatter;
 
 				const filename = makeUniqueFilename(`${title}${suffix}`, usedNames);
-				const markdown = await tiptapJsonToMarkdown(content);
+				let markdown = await tiptapJsonToMarkdown(content);
 
-				zipFolder.file(filename, `${markdown.trim()}\n`);
+				if (fm) {
+					markdown = `---\n${fm}\n---\n${markdown}`;
+				}
+
+				zipFolder?.file(filename, `${markdown.trim()}\n`);
 			}
 		}
 
