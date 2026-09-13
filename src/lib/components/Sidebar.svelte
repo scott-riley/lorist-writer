@@ -196,6 +196,8 @@
 			position: relative;
 			width: 100%;
 			max-width: 100vw;
+			flex-basis: content;
+			flex-shrink: 0;
 		}
 		&.collapsed {
 			width: 60px;
@@ -204,7 +206,7 @@
 				height: 60px;
 				width: 100%;
 				z-index: 1;
-				.trash-item {
+				.sidebar-bottom {
 					display: none;
 				}
 			}
@@ -213,7 +215,6 @@
 				gap: var(--space-xs);
 				@media (max-width: 600px) {
 					flex-direction: row;
-					justify-content: start;
 				}
 			}
 			:global(.pinned-items),
