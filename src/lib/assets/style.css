@@ -24,6 +24,8 @@
 			format('woff');
 }
 
+@import url(https://fonts.bunny.net/css?family=lilex:200,200i,300,300i,400,400i,500i,600,600i,700i);
+
 /* @link https://utopia.fyi/type/calculator?c=360,16,1.2,1240,18,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
 :root {
 	interpolate-size: allow-keywords;
@@ -489,17 +491,17 @@ button,
 		--step-3: clamp(1.62rem, 1.3838rem + 1.0496vw, 2.1973rem);
 		--step-4: clamp(1.944rem, 1.6157rem + 1.4592vw, 2.7466rem);
 		--step-5: clamp(2.3328rem, 1.8826rem + 2.0008vw, 3.4332rem);
-		--editor-font-weight--normal: 340;
+		--editor-font-weight--normal: 300;
 		--editor-font-family-body: var(--font-family-mono);
 		--editor-font-family-heading: var(--font-family-mono);
 		h1 {
 			font-size: var(--step-4);
-			font-weight: 666;
+			font-weight: 700;
 			font-style: italic;
 		}
 		h2 {
 			font-style: italic;
-			font-weight: 666;
+			font-weight: 700;
 			font-size: var(--step-2);
 		}
 		h3 {
