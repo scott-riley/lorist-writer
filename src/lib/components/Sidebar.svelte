@@ -194,6 +194,7 @@
 		}
 		@media (max-width: 600px) {
 			position: relative;
+			border-right: 0;
 			width: 100%;
 			max-width: 100vw;
 			flex-basis: content;
