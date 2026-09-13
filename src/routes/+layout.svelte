@@ -50,13 +50,12 @@
 		rel="stylesheet"
 	/>
 	<link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css" />
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link rel="icon" href={favicon} />
+	<link rel="preconnect" href="https://fonts.bunny.net" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Lilex:ital,wght@0,100..700;1,100..700&display=swap"
+		href="https://fonts.bunny.net/css?family=lilex:200,200i,300,300i,400,400i,500i,600,600i,700i"
 		rel="stylesheet"
 	/>
-	<link rel="icon" href={favicon} />
 	<title>Lorist; the writing app that gets out of your way</title>
 	<meta property="og:image" content="https://lorist.app/og.png" />
 	<meta property="og:title" content="Lorist; the writing app that gets out of your way" />
