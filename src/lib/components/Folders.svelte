@@ -94,6 +94,7 @@
 				isPinned: false
 			});
 			isAdding = false;
+			newFolderName = null;
 		} catch (error) {
 			logError('add folder', error);
 		}
