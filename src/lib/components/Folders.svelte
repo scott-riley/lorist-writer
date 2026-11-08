@@ -116,6 +116,16 @@
 			logError('reorder folder', error);
 		}
 	}
+
+	// NOTE: this function was lifted from ./FolderItem.svelte
+	// focus and select the rename input when added to dom
+	function init(el: HTMLInputElement) {
+		el.focus();
+		el.select();
+		el.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') isAdding = false;
+		});
+	}
 </script>
 
 <div class="folders">
@@ -162,6 +172,7 @@
 					class="mimic-button name-text new-folder-name"
 					bind:value={newFolderName}
 					placeholder="New Folder"
+					{@attach init}
 				/>
 			</div>
 			<div class="menu-item-actions">
